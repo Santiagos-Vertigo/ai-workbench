@@ -113,10 +113,16 @@ applies, it truncates at a word boundary with a visible ellipsis.
 5. **Working-tree condition** — `clean` or `dirty (n changed paths)` from `git status --porcelain`
    `[Verified]`. A dirty tree is a normal, valid, reportable state, never an error.
 6. **Ahead/behind state** — relative to the locally available tracking reference (`@{u}`), if one
-   exists `[Stale Possible]`. If no upstream is configured, reported as `no upstream configured`,
-   not attempted or guessed.
-7. **Remote freshness limitation** — a standing disclaimer shown whenever item 6 is shown: no fetch
-   is ever performed, so ahead/behind reflects local remote-tracking refs only.
+   exists. The ahead/behind count itself is `[Stale Possible]`, since no fetch is ever performed and
+   the local remote-tracking ref may be out of date. If no upstream is configured, that fact is
+   directly observable from local Git state and is reported as `no upstream configured`
+   `[Verified]` — not attempted, not guessed, and not tagged `[Stale Possible]`, since "no upstream
+   exists" does not depend on remote freshness the way an actual count would.
+7. **Remote freshness limitation** — a standing disclaimer shown whenever item 6 is shown. When an
+   upstream exists: no fetch is ever performed, so ahead/behind reflects local remote-tracking refs
+   only. When no upstream is configured: wording states plainly that no ahead/behind comparison is
+   available because no upstream is configured — the generic no-fetch caveat does not apply, since
+   there is no tracking reference to be stale in the first place.
 8. **Project phase** — `[Declared]` only from an explicit `Project Phase` or `Current Phase`
    heading/field in the state file; otherwise reported as `Unknown` `[Unknown]`. A milestone status
    such as "in progress" or "complete" is **not** a project phase and must never be read out of the
@@ -138,9 +144,10 @@ applies, it truncates at a word boundary with a visible ellipsis.
     filenames from the discovery order above. Presence only — contents are not parsed except for the
     one file selected per item 15.
 15. **Project-state file used as the source** — `[Verified]` the exact filename actually read to
-    populate items 8–13, chosen via the discovery order above. If none matched: `[Unknown]`, "no
-    recognized state file found," and items 8–13 all report `[Unknown]` accordingly — never
-    silently substitutes `README.md`.
+    populate items 8–13, chosen via the discovery order above. If none matched, that absence is
+    itself directly observable and is reported as `None found` `[Verified]` — the *fact* that no
+    recognized state file exists is verified, even though it means items 8–13 all report `[Unknown]`
+    accordingly. Never silently substitutes `README.md`.
 16. **Active assistant** — `[Declared]` only if an `Active Assistant` field/heading is explicitly
     present in the recognized state file; otherwise `Unknown` `[Unknown]`. A stateless, independent
     invocation of the console has no way to know whether Claude, Codex, or another assistant is
@@ -217,9 +224,10 @@ GIT
   Branch                  : <branch | "detached HEAD"> [Verified]
   HEAD Commit             : <short hash> <subject> [Verified]
   Working-Tree Condition  : <clean | dirty (n changed paths)> [Verified]
-  Ahead/Behind Upstream   : <n ahead, m behind | "no upstream configured"> [Stale Possible]
+  Ahead/Behind Upstream   : <n ahead, m behind> [Stale Possible]  |  no upstream configured [Verified]
   Remote Freshness        : No fetch was performed; ahead/behind reflects local remote-tracking
-                            refs only.
+                            refs only.  (or, when no upstream: No upstream is configured, so no
+                            ahead/behind comparison is available.)
 
 PROJECT
   Project Phase              : <value> [Declared]  |  Unknown [Unknown]
@@ -233,7 +241,7 @@ BLOCKERS / OPEN QUESTIONS
 
 CONFIG
   Instruction Files Found : <list> [Verified]
-  Project-State File Used : <filename> [Verified]  |  "None found" [Unknown]
+  Project-State File Used : <filename> [Verified]  |  None found [Verified]
   State Source Problem    : <message>   (only present if the higher-priority state file was
                              found but could not be read or parsed)
 
@@ -262,16 +270,18 @@ its exact spacing depends on the terminal it ran in.
 - **Non-Git directory** — report the facts that are available (identity, resolved path), explicitly
   report "Not a Git repository — Git fields unavailable" for items 3–7, exit non-zero. A graceful
   partial report, not a crash.
-- **Missing state file** — not an error; report `[Unknown]` for items 8–13 and 15 as specified above
-  and exit zero. Many legitimate repositories won't have one.
+- **Missing state file** — not an error; report item 15 as `None found` `[Verified]` (the absence
+  itself is directly observable) and items 8–13 as `[Unknown]`, and exit zero. Many legitimate
+  repositories won't have one.
 - **Malformed or unreadable state file** — report the file itself as found `[Verified]`, but items
   8–13 as `[Unknown]` with an explicit note that the file could not be parsed. Never guess partial
   content, never crash, and never fall back to the secondary discovery-order file — see the
   precedence rule in the State Discovery Contract above.
 - **Detached HEAD** — report Git Branch as `detached HEAD` explicitly; HEAD commit still reports
   normally.
-- **Missing upstream** — report Ahead/Behind as `no upstream configured`; never attempted or
-  guessed, never crashes.
+- **Missing upstream** — report Ahead/Behind as `no upstream configured` `[Verified]` (not
+  `[Stale Possible]` — the absence of an upstream is directly observable, not dependent on remote
+  freshness); never attempted or guessed, never crashes.
 - **Dirty working tree** — a normal, valid state; reported as `dirty (n changed paths)`, never an
   error, never a reason to block the report.
 

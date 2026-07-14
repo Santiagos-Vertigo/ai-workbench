@@ -96,18 +96,25 @@ def git_working_tree(repo_path: Path) -> str:
     return f"dirty ({changed} changed path{'s' if changed != 1 else ''})"
 
 
-def git_ahead_behind(repo_path: Path) -> str:
+def git_ahead_behind(repo_path: Path) -> tuple[bool, str]:
+    """Return (has_upstream, display text).
+
+    Whether an upstream is configured at all is directly observable from local Git
+    state — [Verified]. The ahead/behind count itself depends on how fresh the local
+    remote-tracking ref is, since no fetch is ever performed — [Stale Possible]. These
+    are different facts and must not share one evidence label.
+    """
     has_upstream, _ = run_git(
         repo_path, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"]
     )
     if not has_upstream:
-        return "no upstream configured"
+        return False, "no upstream configured"
     ok, out = run_git(repo_path, ["rev-list", "--left-right", "--count", "@{u}...HEAD"])
     parts = out.split() if ok else []
     if len(parts) != 2:
-        return "unavailable"
+        return True, "unavailable"
     behind, ahead = parts
-    return f"{ahead} ahead, {behind} behind"
+    return True, f"{ahead} ahead, {behind} behind"
 
 
 def find_instruction_files(repo_path: Path) -> list[str]:
@@ -317,18 +324,21 @@ def cmd_status(repo_arg: str) -> int:
         print("\n".join(lines))
         return 1
 
+    has_upstream, ahead_behind_text = git_ahead_behind(resolved)
+    ahead_behind_tag = "Stale Possible" if has_upstream else "Verified"
+    remote_freshness_text = (
+        "No fetch was performed; ahead/behind reflects local remote-tracking refs only."
+        if has_upstream
+        else "No upstream is configured, so no ahead/behind comparison is available."
+    )
     lines += render_section(
         "GIT",
         [
             ("Branch", value_with_tag(git_branch(resolved), "Verified")),
             ("HEAD Commit", value_with_tag(git_head_commit(resolved), "Verified")),
             ("Working-Tree Condition", value_with_tag(git_working_tree(resolved), "Verified")),
-            ("Ahead/Behind Upstream", value_with_tag(git_ahead_behind(resolved), "Stale Possible")),
-            (
-                "Remote Freshness",
-                "No fetch was performed; ahead/behind reflects local remote-tracking "
-                "refs only.",
-            ),
+            ("Ahead/Behind Upstream", value_with_tag(ahead_behind_text, ahead_behind_tag)),
+            ("Remote Freshness", remote_freshness_text),
         ],
     )
 
@@ -384,7 +394,7 @@ def cmd_status(repo_arg: str) -> int:
         ),
         (
             "Project-State File Used",
-            value_with_tag(state_file, "Verified") if state_file else '"None found" [Unknown]',
+            value_with_tag(state_file if state_file else "None found", "Verified"),
         ),
     ]
     if problem:
