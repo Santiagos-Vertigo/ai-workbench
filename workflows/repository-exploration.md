@@ -34,23 +34,27 @@ tier.
 ## Procedure
 
 1. Confirm the repository root and orient to the top-level structure.
-2. Determine current Git state per standards/git.md's Repository Awareness practices (branch,
-   status, upstream tracking, divergence) — read-only, no fetch.
-3. Identify languages and frameworks from manifests and file conventions.
-4. Identify package managers and lockfiles present.
-5. Locate application entry points.
-6. Identify configuration and environment requirements (e.g. `.env.example`, config files)
+2. Determine the repository's purpose from README, package manifest description, or equivalent
+   top-level documentation; tag per Evidence Classification.
+3. Determine current Git state per standards/git.md's Repository Awareness practices (branch,
+   status, upstream tracking, divergence) — read-only, no fetch. Divergence and upstream tracking
+   reflect the local remote-tracking state only; tag `[Inference]` rather than `[Verified]` when
+   no fetch has occurred.
+4. Identify languages and frameworks from manifests and file conventions.
+5. Identify package managers and lockfiles present.
+6. Locate application entry points.
+7. Identify configuration and environment requirements (e.g. `.env.example`, config files)
    without reading secret values into the output.
-7. Identify local initialization, development, build, and test commands from manifests or
+8. Identify local initialization, development, build, and test commands from manifests or
    scripts — read only, never execute.
-8. Identify test structure and locations.
-9. Gather deployment evidence (CI/CD config, Dockerfiles, deployment manifests).
-10. Identify architectural boundaries and important directories.
-11. Locate documentation and decision records.
-12. Cross-check documentation claims against observed code and repository state; flag conflicts.
-13. Compile risks, missing information, and unresolved questions.
-14. Assess development readiness.
-15. Recommend next investigation steps — not next development actions; that belongs to a future
+9. Identify test structure and locations.
+10. Gather deployment evidence (CI/CD config, Dockerfiles, deployment manifests).
+11. Identify architectural boundaries and important directories.
+12. Locate documentation and decision records.
+13. Cross-check documentation claims against observed code and repository state; flag conflicts.
+14. Compile risks, missing information, and unresolved questions.
+15. Assess development readiness.
+16. Recommend next investigation steps — not next development actions; that belongs to a future
     workflow.
 
 ## Evidence Classification
