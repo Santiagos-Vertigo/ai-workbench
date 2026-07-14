@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.6 (in progress) — Session Initialization and Scope Control
+v0.6 (complete) — Session Initialization and Scope Control
 
 ## Completed
 
@@ -112,18 +112,42 @@ v0.6 (in progress) — Session Initialization and Scope Control
 - Applied the judgment-resolution framework to the incident itself: resolved via explicit decision
   criteria, risk-based escalation, and an authorization checkpoint — not Profile evidence, since no
   recurring behavioral stance survived the five mechanisms. profiles/ remains intentionally absent.
+- Completion review of v0.6: found that the CLAUDE.md Core Rule's original wording — "...never by
+  itself authorizes selecting, accessing, modifying, or acting on it — only the user's...selection
+  does" — grouped scope authorization (selecting/accessing) and action authorization
+  (modifying/acting) under the same clause, which could be misread as selection alone authorizing
+  modification. Corrected with the smallest necessary wording: selection now explicitly establishes
+  scope only, and a new sentence states it never by itself authorizes modifying, staging,
+  committing, pushing, deploying, or any other action already gated by CLAUDE.md's tiers.
+  workflows/session-initialization.md was checked for the same ambiguity and does not share it — its
+  language was already scoped precisely to "candidate scope" and "read-only inspection" — so it was
+  left unmodified.
+- Validated the corrected rule against four exact scenarios: (A) explicit Workbench-modification
+  request — mode and target established with no redundant question, action authorization still
+  gates the actual edit; (B) a repository named only inside a hypothetical, illustrative question —
+  correctly classified as contextual, not selected, even though named in the current message, no
+  access occurs; (C) an AI-generated recommendation to use an unselected external repository —
+  stops at a direct scope checkpoint before any access; (D) an explicit request naming an external
+  repository — scope established immediately with no redundant question, read-only initialization
+  proceeds, but the recommended capability (Repository Exploration) is still only recommended, not
+  auto-invoked. All four passed.
+- Confirmed: Session Initialization runs before any capability workflow; it recommends rather than
+  auto-executes; it produces a concise Session Scope Declaration; no Profile evidence was produced;
+  no conflicting authorization model was introduced (the correction removed an internal ambiguity
+  rather than adding a new rule surface); v0.1 through v0.5 history remains preserved and unaltered.
+- v0.6 marked complete.
 
 ## Current Status
 
-v0.6 — Session Initialization and Scope Control is in progress. workflows/session-initialization.md
-has been created and CLAUDE.md has gained one Core Rule making it discoverable and mandatory before
-any capability workflow runs or any other repository is accessed. Validated entirely inside
-ai-workbench via four simulated scenarios; not yet marked complete pending review. No external
-repository was accessed during this milestone. Both prior open architectural questions
-(authorization detail placement; communication-style calibration) remain unresolved and are carried
-forward unchanged. No Profile requirement was demonstrated by this milestone's motivating incident;
-profiles/ remains intentionally absent. CLAUDE.md remains the sole authority for execution
-permission.
+v0.6 — Session Initialization and Scope Control is complete. workflows/session-initialization.md
+exists and CLAUDE.md carries one Core Rule making it discoverable and mandatory before any
+capability workflow runs or any other repository is accessed, with the scope-vs-action ambiguity
+found and corrected during completion review. Validated entirely inside ai-workbench via four exact
+simulated scenarios (A–D), all passing. No external repository was accessed during this milestone.
+Both prior open architectural questions (authorization detail placement; communication-style
+calibration) remain unresolved and are carried forward unchanged. No Profile requirement was
+demonstrated; profiles/ remains intentionally absent. CLAUDE.md remains the sole authority for
+execution permission.
 
 ## Architectural Decisions
 
@@ -189,18 +213,21 @@ ai-workbench/
 
 ## Next Objective
 
-Review workflows/session-initialization.md, the new CLAUDE.md Core Rule, and the four simulated
-validation scenarios, and decide whether v0.6 can be marked complete. Do not create profiles/,
-adapters/, or templates/ — no Profile requirement has been demonstrated. Do not access Logitrac or
-any other external repository. Do not commit or push until separately authorized.
+Unresolved / awaiting selection. v0.6 is complete; no next milestone has been chosen. The roadmap's
+placeholder naming "v0.6 — Code Review Workflow" no longer matches what v0.6 actually became
+(Session Initialization and Scope Control) — this is a stale label, not a commitment; do not treat
+it as the automatic next objective. Do not invent or begin v0.7 speculatively. Do not create
+profiles/, adapters/, or templates/ — no Profile requirement has been demonstrated. Do not commit or
+push until separately authorized.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.6 is in progress: workflows/session-initialization.md and the CLAUDE.md Core Rule are
-   drafted but not yet marked complete.
-5. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
+4. Confirm v0.6 is complete and no next milestone has been approved or started.
+5. Before invoking any capability workflow or accessing another repository, run
+   workflows/session-initialization.md first — this is now a CLAUDE.md Core Rule, not optional.
+6. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
    Actions section or creating a docs/ directory.
-6. Ask what concrete task motivates the next change before proposing new files or folders.
+7. Ask what concrete task motivates the next change before proposing new files or folders.

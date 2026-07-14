@@ -87,5 +87,8 @@ modularity, maintainability, and long-term scalability over speed of adding stru
   workflows/development.md) or accessing any repository other than the one already active,
   establish session scope via workflows/session-initialization.md. A repository named only in
   prior context, an example, a hypothetical, or an AI-generated recommendation never by itself
-  authorizes selecting, accessing, modifying, or acting on it — only the user's current, explicit,
-  unambiguous selection does.
+  authorizes selecting or accessing it; only the user's current, explicit, unambiguous selection
+  establishes that it is in scope. Selection establishes scope only — it never by itself
+  authorizes modifying, staging, committing, pushing, deploying, or any other action already
+  gated above; those still require their own separate approval under the tiers already defined
+  in this document.
