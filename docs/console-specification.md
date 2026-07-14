@@ -1,6 +1,8 @@
 # Workbench Console Specification
 
-Specification only — v0.7. No code is implemented by this document. Implementation is v0.8.
+Defines the Workbench Console's `status` command. Project-state field definitions, canonical
+headings, evidence-label behavior for declared state, and legacy-alias precedence are governed by
+standards/project-state.md and referenced here, not restated.
 
 ## Evidence Labels
 
@@ -58,7 +60,7 @@ when this milestone was proposed.
 workbench status <repository-path>
 ```
 
-During v0.8 development, before any packaging/installation exists:
+Before any packaging/installation exists:
 
 ```
 python tools/console/workbench.py status <repository-path>
@@ -84,11 +86,11 @@ If both exist, `WORKBENCH_STATE.md` wins.
 
 If the higher-priority file exists but is malformed or unreadable, the console does **not** fall
 back to the secondary file — falling back could conceal a broken authoritative state file rather
-than surfacing it. Instead: the affected fields (8–13) are reported `[Unknown]`, and the source
-problem is reported clearly and specifically (e.g. "`WORKBENCH_STATE.md` found but could not be
-parsed") rather than silently substituted.
+than surfacing it. Instead: the project-state fields (item 8 below) are reported `[Unknown]`, and
+the source problem is reported clearly and specifically (e.g. "`WORKBENCH_STATE.md` found but could
+not be parsed") rather than silently substituted.
 
-If neither file exists, state-dependent fields (8–13) remain `[Unknown]`. The console does not
+If neither file exists, the project-state fields remain `[Unknown]`. The console does not
 assume every repository has one, does not derive phase or objective from Git history, does not
 invent a development stage, and does not silently treat `README.md` as structured project state. If
 `README.md` information is surfaced at all, it is labeled a **source excerpt**, never an inferred
@@ -101,7 +103,7 @@ with normalized spaces, and extraction stops only at a blank line or the next st
 physical line. An excerpt still never reproduces an entire long section; if a maximum length
 applies, it truncates at a word boundary with a visible ellipsis.
 
-### The 20 fields
+### The fields
 
 1. **Repository identity** — the directory name (basename of the resolved path) `[Verified]`. If
    `README.md` exists, its first heading line may be shown alongside as a labeled source excerpt
@@ -123,52 +125,48 @@ applies, it truncates at a word boundary with a visible ellipsis.
    only. When no upstream is configured: wording states plainly that no ahead/behind comparison is
    available because no upstream is configured — the generic no-fetch caveat does not apply, since
    there is no tracking reference to be stale in the first place.
-8. **Project phase** — `[Declared]` only from an explicit `Project Phase` or `Current Phase`
-   heading/field in the state file; otherwise reported as `Unknown` `[Unknown]`. A milestone status
-   such as "in progress" or "complete" is **not** a project phase and must never be read out of the
-   Current Version field to populate this — phase and milestone status are different facts. Never
-   derived from Git history.
-9. **Current milestone or version** — `[Declared]` from the state file's own version/milestone
-   field (e.g. "v0.8 (in progress)"); `[Unknown]` otherwise. This may legitimately contain a status
-   word — it is milestone status, not project phase.
-10. **Current objective** — `[Declared]` from the state file's current-status/objective field;
-    `[Unknown]` otherwise.
-11. **Completed work** — `[Declared]`, a short excerpt (not a full reproduction) of the state
-    file's completed-work section; `[Unknown]` otherwise.
-12. **Next objective** — `[Declared]` from the state file's next-objective field; `[Unknown]`
-    otherwise.
-13. **Known blockers or unresolved questions** — `[Declared]` from an open-questions/blockers
-    section if present; `[Unknown]` otherwise. Never inferred from TODOs, code, or Git history.
-14. **Repository-local instruction files found** — `[Verified]` presence check against a fixed,
-    documented list: `README.md`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, and the project-state
-    filenames from the discovery order above. Presence only — contents are not parsed except for the
-    one file selected per item 15.
-15. **Project-state file used as the source** — `[Verified]` the exact filename actually read to
-    populate items 8–13, chosen via the discovery order above. If none matched, that absence is
+8. **Project-state fields** — Project Purpose, Lifecycle Phase, Current Milestone / Version,
+   Current Objective, Intended Outcome, Definition of Done, Completed Work, Next Objective, and
+   Blockers / Open Questions. Their canonical headings, required/optional classification,
+   evidence-label behavior, and legacy-alias precedence (including the ordered Lifecycle Phase
+   chain — `Project Phase`, then `Current Phase`) are defined entirely by
+   standards/project-state.md and are not restated here. The console implements that contract
+   exactly: a canonical heading wins whenever present, even if empty (which reports `[Unknown]` and
+   masks any legacy alias); if the canonical heading is absent, the first present legacy alias in
+   documented order wins, even if empty; no undocumented heading is ever recognized. No
+   project-state field is ever inferred from another field, from `README.md`, from Git history, or
+   from source code.
+9. **Repository-local instruction files found** — `[Verified]` presence check against a fixed,
+   documented list: `README.md`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, and the project-state
+   filenames from the discovery order above. Presence only — contents are not parsed except for the
+   one file selected per item 10.
+10. **Project-state file used as the source** — `[Verified]` the exact filename actually read to
+    populate item 8's fields, chosen via the discovery order above. If none matched, that absence is
     itself directly observable and is reported as `None found` `[Verified]` — the *fact* that no
-    recognized state file exists is verified, even though it means items 8–13 all report `[Unknown]`
-    accordingly. Never silently substitutes `README.md`.
-16. **Active assistant** — `[Declared]` only if an `Active Assistant` field/heading is explicitly
+    recognized state file exists is verified, even though it means every project-state field
+    reports `[Unknown]` accordingly. Never silently substitutes `README.md`.
+11. **Active assistant** — `[Declared]` only if an `Active Assistant` field/heading is explicitly
     present in the recognized state file; otherwise `Unknown` `[Unknown]`. A stateless, independent
     invocation of the console has no way to know whether Claude, Codex, or another assistant is
     already running in the surrounding session — it must never guess, and must never report
     `not launched` as if that were a verified fact about that external session. (The console may
     separately, truthfully state that *this command's own execution* did not launch an assistant —
     see Authorization State below — but that is a fact about itself, not knowledge of the session.)
-17. **Active workflow** — `[Declared]` only if an `Active Workflow` field/heading is explicitly
+    Not part of the Project State Contract — session/runtime state, not project state.
+12. **Active workflow** — `[Declared]` only if an `Active Workflow` field/heading is explicitly
     present in the recognized state file; otherwise `Unknown` `[Unknown]`, for the same reason as
-    item 16. Recommending or selecting a workflow remains the AI session's job via
+    item 11. Recommending or selecting a workflow remains the AI session's job via
     workflows/session-initialization.md; the console never infers this.
-18. **Active Profile** — `[Declared]` only if an `Active Profile` field/heading is explicitly
+13. **Active Profile** — `[Declared]` only if an `Active Profile` field/heading is explicitly
     present in the recognized state file; otherwise `Unknown` `[Unknown]`, for the same reason as
-    item 16. `profiles/` does not exist yet; even after it does, the console may only report a
+    item 11. `profiles/` does not exist yet; even after it does, the console may only report a
     Profile a repository explicitly declares — never invented, never assumed absent.
-19. **Authorization state** — `[Verified]`, since this is a fact the program controls about its own
+14. **Authorization state** — `[Verified]`, since this is a fact the program controls about its own
     execution, not repository content: report-only console operation; this command did not modify
     files, launch an assistant, select a workflow, or activate a Profile. This is a statement about
     what the command itself just did — it must not be read as knowledge of the surrounding session
-    (see items 16–18).
-20. **Stop condition** — `[Verified]`, for the same reason as item 19: the command has completed and
+    (see items 11–13).
+15. **Stop condition** — `[Verified]`, for the same reason as item 14: the command has completed and
     exited; no process remains running. The console is single-shot, never a background process.
 
 ## 8. Output Presentation Contract
@@ -178,9 +176,10 @@ Output is grouped into seven titled sections, in this order, each containing the
 1. **REPOSITORY** — Repository Identity, README Heading (if `README.md` exists), Resolved
    Repository Path.
 2. **GIT** — Branch, HEAD Commit, Working-Tree Condition, Ahead/Behind Upstream, Remote Freshness.
-3. **PROJECT** — Project Phase, Current Milestone/Version, Current Objective, Completed Work
-   (excerpt), Next Objective.
-4. **BLOCKERS / OPEN QUESTIONS** — Blockers / Unresolved Questions.
+3. **PROJECT** — Project Purpose, Lifecycle Phase, Current Milestone / Version, Current Objective,
+   Intended Outcome, Definition of Done, Completed Work (excerpt), Next Objective — in this order,
+   per standards/project-state.md's Canonical Field Table.
+4. **BLOCKERS / OPEN QUESTIONS** — Blockers / Open Questions.
 5. **CONFIG** — Instruction Files Found, Project-State File Used, and, only when the higher-priority
    state file could not be read or parsed, State Source Problem.
 6. **SESSION** — Active Assistant, Active Workflow, Active Profile.
@@ -230,14 +229,17 @@ GIT
                             ahead/behind comparison is available.)
 
 PROJECT
-  Project Phase              : <value> [Declared]  |  Unknown [Unknown]
-  Current Milestone/Version  : <value> [Declared]  |  [Unknown]
-  Current Objective          : <value> [Declared]  |  [Unknown]
-  Completed Work (excerpt)   : <value> [Declared]  |  [Unknown]
-  Next Objective              : <value> [Declared]  |  [Unknown]
+  Project Purpose              : <value> [Declared]  |  [Unknown]
+  Lifecycle Phase              : <value> [Declared]  |  [Unknown]
+  Current Milestone / Version  : <value> [Declared]  |  [Unknown]
+  Current Objective            : <value> [Declared]  |  [Unknown]
+  Intended Outcome             : <value> [Declared]  |  [Unknown]
+  Definition of Done           : <value> [Declared]  |  [Unknown]
+  Completed Work (excerpt)     : <value> [Declared]  |  [Unknown]
+  Next Objective                : <value> [Declared]  |  [Unknown]
 
 BLOCKERS / OPEN QUESTIONS
-  Blockers / Unresolved Questions : <value> [Declared]  |  [Unknown]
+  Blockers / Open Questions : <value> [Declared]  |  [Unknown]
 
 CONFIG
   Instruction Files Found : <list> [Verified]
@@ -270,13 +272,16 @@ its exact spacing depends on the terminal it ran in.
 - **Non-Git directory** — report the facts that are available (identity, resolved path), explicitly
   report "Not a Git repository — Git fields unavailable" for items 3–7, exit non-zero. A graceful
   partial report, not a crash.
-- **Missing state file** — not an error; report item 15 as `None found` `[Verified]` (the absence
-  itself is directly observable) and items 8–13 as `[Unknown]`, and exit zero. Many legitimate
-  repositories won't have one.
-- **Malformed or unreadable state file** — report the file itself as found `[Verified]`, but items
-  8–13 as `[Unknown]` with an explicit note that the file could not be parsed. Never guess partial
-  content, never crash, and never fall back to the secondary discovery-order file — see the
-  precedence rule in the State Discovery Contract above.
+- **Missing state file** — not an error; report Project-State File Used as `None found` `[Verified]`
+  (the absence itself is directly observable) and every project-state field as `[Unknown]`, and exit
+  zero. Many legitimate repositories won't have one.
+- **Malformed or unreadable state file** — report the file itself as found `[Verified]`, but every
+  project-state field as `[Unknown]` with an explicit note that the file could not be parsed. Never
+  guess partial content, never crash, and never fall back to the secondary discovery-order file —
+  see the precedence rule in the State Discovery Contract above.
+- **Canonical heading present but empty, or a higher-precedence legacy alias present but empty** —
+  reports `[Unknown]` for that field; never falls through to a lower-precedence alias — per
+  standards/project-state.md's precedence algorithm, applied exactly.
 - **Detached HEAD** — report Git Branch as `detached HEAD` explicitly; HEAD commit still reports
   normally.
 - **Missing upstream** — report Ahead/Behind as `no upstream configured` `[Verified]` (not
@@ -285,9 +290,9 @@ its exact spacing depends on the terminal it ran in.
 - **Dirty working tree** — a normal, valid state; reported as `dirty (n changed paths)`, never an
   error, never a reason to block the report.
 
-## 10. Statelessness Requirement (v0.8 MVP)
+## 10. Statelessness Requirement (Workbench Console)
 
-The v0.8 console MVP must be fully stateless. It may write only to stdout and stderr. Under any
+The Workbench Console must be fully stateless. It may write only to stdout and stderr. Under any
 code path — including error paths — it must not intentionally create or modify:
 
 - files in the target repository;
@@ -300,14 +305,15 @@ code path — including error paths — it must not intentionally create or modi
 - Python bytecode or `__pycache__` inside the Workbench;
 - Git metadata or index state.
 
-Future persistent state, caching, history, or configuration is explicitly out of scope for v0.8 and
-requires a separately approved milestone — it is not assumed, and this specification does not
-authorize it. Verified in every validation scenario via before/after `git status` (and a filesystem
-check where relevant) on both the target repository and the ai-workbench installation.
+Future persistent state, caching, history, or configuration is explicitly out of scope for the
+Workbench Console and requires a separately approved milestone — it is not assumed, and this
+specification does not authorize it. Verified in every validation scenario via before/after
+`git status` (and a filesystem check where relevant) on both the target repository and the
+ai-workbench installation.
 
 ## 11. Security and Scope Restrictions
 
-- Local filesystem paths only — no URLs, no remote cloning, no network access in the MVP.
+- Local filesystem paths only — no URLs, no remote cloning, no network access at all.
 - Never executes code found inside the target repository — no running scripts, no importing
   modules, no evaluating config files as code. Filesystem and Git inspection only.
 - Never reads or displays file contents beyond what is explicitly specified above (declared state
@@ -316,7 +322,7 @@ check where relevant) on both the target repository and the ai-workbench install
 - Runs with whatever OS-level permissions the invoking user already has. Requests no elevation,
   installs nothing, modifies no system state.
 
-### Git Subprocess Safeguards (v0.8 requirement, not yet implemented)
+### Git Subprocess Safeguards (Workbench Console requirement)
 
 Every Git inspection subprocess the console invokes must:
 
@@ -334,9 +340,10 @@ The implementation must use the equivalent of:
 - `GIT_TERMINAL_PROMPT=0`
 - `GIT_NO_LAZY_FETCH=1` when supported
 
-These are specified here as v0.8 requirements; none are implemented by this document.
+These are Workbench Console requirements; this document specifies them but does not itself
+implement them.
 
-## 12. MVP Exclusions
+## 12. Exclusions (Workbench Console)
 
 Full GUI; VS Code replacement; automatic code modification; automatic capability execution;
 multi-agent orchestration; Profiles without evidence; remote repository access; deployment;
@@ -358,7 +365,7 @@ or memory across runs; a remembered or inferred repository path.
 9. Run against a repository with a dirty working tree — accurate report, no attempt to modify,
    stash, or clean it.
 10. *(Deferred, separately authorized)* run against a second real external repository to prove
-    technology-agnosticism — explicitly reserved for actual v0.8 implementation review, not part of
+    technology-agnosticism — explicitly reserved for actual implementation review, not part of
     this specification's own validation.
 
 ## 14. Criteria for Proceeding to v0.8

@@ -32,11 +32,23 @@ v1.0 — Portable AI Engineering Workbench
 
 The roadmap is intentionally lightweight. Future versions are placeholders for direction only.
 
-## Current Version
+## Project Purpose
+
+AI Workbench is a portable, technology-agnostic engineering framework — an Engineering Operating
+System — for working with AI coding assistants across any project or technology stack. It is
+consumed by other project repositories; it never contains their application code, and it is never
+itself an application.
+
+## Current Milestone / Version
 
 v0.9 (in progress) — Project State Contract and Console Integration
 
-## Completed
+## Lifecycle Phase
+
+Active development — building out the framework's foundational layers (standards, workflows,
+tooling) milestone by milestone.
+
+## Completed Work
 
 - Layer 0 Foundation completed.
 - Behavior Contract completed.
@@ -50,7 +62,7 @@ v0.9 (in progress) — Project State Contract and Console Integration
   - Added staleness handling to the Git-state step so upstream tracking and divergence are tagged
     `[Inference]`, not `[Verified]`, when no fetch has occurred.
   - Identified a third finding (Prohibited Actions list drifts slightly from CLAUDE.md's tiers) and
-    deferred it — see Open Questions.
+    deferred it — see Blockers / Open Questions.
 - v0.4 marked complete.
 - Conducted the v0.5 architectural assessment: defined the Standard / Workflow / Profile
   distinction and a five-mechanism judgment-resolution framework (repository evidence, explicit
@@ -218,12 +230,25 @@ v0.9 (in progress) — Project State Contract and Console Integration
   entire fixture root was deleted afterward, with removal independently confirmed.
 - v0.8 marked complete.
 
-## Current Status
+## Current Objective
 
-- v0.9 is in progress.
-- standards/project-state.md has been reviewed and approved.
-- Console specification, console implementation, persistent tests, and structural migration of
-  WORKBENCH_STATE.md have not started.
+Project State Contract console integration is implemented, tested, reviewed, and approved. The
+persistent 32-test regression suite (tools/console/tests/) passes. Manual acceptance remains
+pending. v0.9 remains in progress.
+
+## Intended Outcome
+
+A single, consistent project-state vocabulary that both humans and the Workbench Console rely on —
+implemented in the console, proven by a persistent regression suite, and adopted by this
+repository's own state file as the first real example.
+
+## Definition of Done
+
+docs/console-specification.md and tools/console/workbench.py implement the approved canonical
+fields and legacy-alias precedence exactly; the persistent regression suite in
+tools/console/tests/ passes and leaves no artifacts; this file uses the canonical headings with no
+project history lost; the console's self-report against this repository shows the migrated fields
+as `[Declared]`; zero-write and all other v0.8 guarantees are preserved.
 
 ## Architectural Decisions
 
@@ -245,11 +270,11 @@ v0.9 (in progress) — Project State Contract and Console Integration
   clarification, risk-based escalation, authorization checkpoint) and would recur the same way
   across multiple workflows — not merely because a single step "requires judgment."
 - New workflow documents cross-reference CLAUDE.md's Execution Authorization tiers rather than
-  restating an itemized Prohibited Actions list, to avoid the drift identified in the Open
-  Questions item below. workflows/development.md follows this pattern; it is a precedent, not yet
-  a retroactive fix — see Open Questions.
+  restating an itemized Prohibited Actions list, to avoid the drift identified in the
+  Blockers / Open Questions item below. workflows/development.md follows this pattern; it is a
+  precedent, not yet a retroactive fix — see Blockers / Open Questions.
 
-## Open Questions
+## Blockers / Open Questions
 
 - **Where should enumerated authorization detail live: CLAUDE.md or individual workflows?**
   workflows/repository-exploration.md's Prohibited Actions list bans `git fetch`, which is absent
@@ -286,6 +311,8 @@ ai-workbench/
 │   └── project-state.md
 ├── tools/
 │   └── console/
+│       ├── tests/
+│       │   └── test_workbench.py
 │       └── workbench.py
 └── workflows/
     ├── development.md
@@ -295,20 +322,19 @@ ai-workbench/
 
 ## Next Objective
 
-Align docs/console-specification.md and tools/console/workbench.py with the approved Project State
-Contract, add the persistent standard-library regression suite, and structurally migrate
-WORKBENCH_STATE.md without creating an intermediate broken checkpoint. These edits require separate
-authorization.
+Perform the v0.9 manual acceptance exercise from a separate PowerShell terminal against
+ai-workbench and the intentionally selected logitrac test repository. Confirm correct canonical
+and unknown-state behavior and verify zero repository writes.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.9 is in progress; standards/project-state.md is approved, and console integration
-   has not started.
+4. Confirm v0.9 is in progress; Phase 2 (console integration, persistent tests, structural
+   migration) is committed or ready to commit, and manual acceptance is next.
 5. Before invoking any capability workflow or accessing another repository, run
    workflows/session-initialization.md first — this is a CLAUDE.md Core Rule, not optional.
-6. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
+6. Review Blockers / Open Questions before touching workflows/repository-exploration.md's Prohibited
    Actions section.
 7. Ask what concrete task motivates the next change before proposing new files or folders.

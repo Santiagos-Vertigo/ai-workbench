@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Workbench Console — read-only status reporter.
 
-Implements exactly the v0.8 MVP defined by docs/console-specification.md: a single,
-dependency-free, stdlib-only, stateless command that reports Workbench and repository
-state to stdout/stderr. It never modifies anything, never launches anything, never
-selects a workflow, and never grants scope or authorization.
+Implements the Workbench Console's `status` command, defined by
+docs/console-specification.md: a single, dependency-free, stdlib-only, stateless command
+that reports Workbench and repository state to stdout/stderr. It never modifies anything,
+never launches anything, never selects a workflow, and never grants scope or authorization.
 """
 
 import sys
@@ -204,28 +204,58 @@ def truncate_at_word_boundary(text: str, max_len: int = 200) -> str:
     return truncated.rstrip() + "…"
 
 
-def declared_field(sections: dict[str, str] | None, key: str) -> str | None:
-    if not sections or key not in sections or not sections[key].strip():
+def resolve_chain(sections: dict[str, str] | None, chain: tuple[str, ...]) -> str | None:
+    """Walk a canonical-then-legacy-alias precedence chain, per
+    standards/project-state.md's "Legacy Alias and Precedence Rules".
+
+    Evaluates headings in the given fixed order and stops at the first one found
+    present in the file — whether or not its content is empty. Returns that heading's
+    raw (unstripped) content, or None if no heading in the chain is present anywhere.
+    A present-but-empty heading still stops the walk: lower-precedence aliases are
+    never consulted as a fallback once a higher-precedence heading is found present.
+    No heading outside the documented chain is ever recognized.
+    """
+    if not sections:
         return None
-    paragraph = first_paragraph_or_item(sections[key])
+    for heading in chain:
+        if heading in sections:
+            return sections[heading]
+    return None
+
+
+def declared_field_chain(sections: dict[str, str] | None, chain: tuple[str, ...]) -> str | None:
+    raw = resolve_chain(sections, chain)
+    if raw is None or not raw.strip():
+        return None
+    paragraph = first_paragraph_or_item(raw)
     if not paragraph:
         return None
     return truncate_at_word_boundary(paragraph)
 
 
-def project_phase(sections: dict[str, str] | None) -> str | None:
-    """Explicit project-phase field only — never derived from a milestone/version status.
+def declared_field(sections: dict[str, str] | None, key: str) -> str | None:
+    """Single-heading lookup — equivalent to a one-element precedence chain. Used for
+    fields with no canonical/legacy distinction (the SESSION fields)."""
+    return declared_field_chain(sections, (key,))
 
-    "In progress" / "complete" are milestone statuses, not project phases; this must not
-    read them out of a Current Version heading. Only an explicit "Project Phase" or
-    "Current Phase" heading counts.
-    """
-    if not sections:
-        return None
-    for key in ("Project Phase", "Current Phase"):
-        if key in sections and sections[key].strip():
-            return declared_field(sections, key)
-    return None
+
+# Canonical project-state fields, in PROJECT-section display order, each mapped to its
+# precedence chain (canonical heading first, legacy aliases after, in documented order)
+# per standards/project-state.md's Canonical Field Table and Legacy Alias and
+# Precedence Rules. No field here is ever inferred from another field, from
+# README.md, from Git history, or from source code.
+PROJECT_FIELD_CHAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Project Purpose", ("Project Purpose",)),
+    ("Lifecycle Phase", ("Lifecycle Phase", "Project Phase", "Current Phase")),
+    ("Current Milestone / Version", ("Current Milestone / Version", "Current Version")),
+    ("Current Objective", ("Current Objective", "Current Status")),
+    ("Intended Outcome", ("Intended Outcome",)),
+    ("Definition of Done", ("Definition of Done",)),
+    ("Completed Work (excerpt)", ("Completed Work", "Completed")),
+    ("Next Objective", ("Next Objective",)),
+)
+
+BLOCKERS_CHAIN: tuple[str, ...] = ("Blockers / Open Questions", "Open Questions")
 
 
 def readme_heading(repo_path: Path) -> str | None:
@@ -344,46 +374,23 @@ def cmd_status(repo_arg: str) -> int:
 
     state_file, sections, problem = read_state_file(resolved)
 
+    # When `sections` is None (missing or malformed state file), every chain lookup
+    # naturally resolves to None below — no separate "problem" branch is needed to
+    # blank these fields out; the precedence walk already degrades correctly on its own.
     project_entries: list[tuple[str, str]] = [
-        ("Project Phase", declared_or_unknown_literal(project_phase(sections))),
+        (label, declared_or_unknown(declared_field_chain(sections, chain)))
+        for label, chain in PROJECT_FIELD_CHAINS
     ]
-    if problem:
-        for name in [
-            "Current Milestone/Version",
-            "Current Objective",
-            "Completed Work (excerpt)",
-            "Next Objective",
-        ]:
-            project_entries.append((name, "[Unknown]"))
-        blockers_value: str | None = None
-    else:
-        project_entries.append(
-            (
-                "Current Milestone/Version",
-                declared_or_unknown(declared_field(sections, "Current Version")),
-            )
-        )
-        project_entries.append(
-            ("Current Objective", declared_or_unknown(declared_field(sections, "Current Status")))
-        )
-        project_entries.append(
-            (
-                "Completed Work (excerpt)",
-                declared_or_unknown(declared_field(sections, "Completed")),
-            )
-        )
-        project_entries.append(
-            (
-                "Next Objective",
-                declared_or_unknown(declared_field(sections, "Next Objective")),
-            )
-        )
-        blockers_value = declared_field(sections, "Open Questions")
     lines += render_section("PROJECT", project_entries)
 
     lines += render_section(
         "BLOCKERS / OPEN QUESTIONS",
-        [("Blockers / Unresolved Questions", declared_or_unknown(blockers_value))],
+        [
+            (
+                "Blockers / Open Questions",
+                declared_or_unknown(declared_field_chain(sections, BLOCKERS_CHAIN)),
+            )
+        ],
     )
 
     found = find_instruction_files(resolved)

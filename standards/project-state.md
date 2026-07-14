@@ -3,18 +3,17 @@
 ## Purpose and Scope
 
 This Standard defines the minimum canonical vocabulary a repository's project-state file should
-use to be reliably legible to both humans and Workbench tooling (e.g., a future-aligned Workbench
-Console). It is a rule about document *structure* — "WHAT rules always apply" — not a procedure and
+use to be reliably legible to both humans and Workbench tooling (e.g., the Workbench Console). It
+is a rule about document *structure* — "WHAT rules always apply" — not a procedure and
 not an execution-permission document. CLAUDE.md remains the sole authority for execution
 permission; this Standard never grants or restricts it. Workflows remain the "WHAT steps to follow"
 layer; this Standard does not define a procedure.
 
-This document defines the contract only. It does not itself change console behavior — console
-integration is a later, separately authorized implementation step within v0.9, not a separate
-milestone (see "Future Console-Integration Requirements"). Adoption by external repositories is
-voluntary and incremental. AI Workbench's own `WORKBENCH_STATE.md` migration is a planned later
-step within v0.9, subject to its own separate authorization and review checkpoint — not part of
-drafting this Standard.
+This document defines the contract. Any Workbench Console implementation must conform to it
+exactly — canonical headings, required/optional classification, evidence-label behavior, and
+legacy-alias precedence, as defined below (see "Console Integration Requirements"). Implementation
+status (what is currently built, migrated, or still pending) is tracked in `WORKBENCH_STATE.md`,
+not here.
 
 ## Canonical Field Table
 
@@ -58,9 +57,8 @@ workflows/repository-exploration.md and docs/console-specification.md:
 - `[Verified]` and `[Stale Possible]` do not apply to declared project-state content — those labels
   are reserved for filesystem- and Git-derived facts, which this Standard does not govern (see
   docs/console-specification.md's State Discovery Contract for those).
-- `[Declared]` — a canonical field's heading (or, until console alignment, a documented legacy
-  alias — see below) is present with non-empty content in the state file the discovery order
-  actually selected.
+- `[Declared]` — a canonical field's heading (or a documented legacy alias — see below) is present
+  with non-empty content in the state file the discovery order actually selected.
 - `[Unknown]` — no heading in the field's precedence chain (canonical or any documented alias, see
   "Legacy Alias and Precedence Rules") is present, or the heading selected by that chain is present
   but empty.
@@ -162,15 +160,14 @@ repository's own pre-migration `WORKBENCH_STATE.md`, or any other repository's p
 file — can eventually be read without immediate rewriting. New files should use canonical headings
 directly.
 
-**Alias recognition is a console-implementation concern, not yet built.** This document defines
-what the mapping and precedence must be once implemented; it does not itself change console
-behavior.
+**Workbench Console implementations must recognize the documented aliases and precedence exactly**
+— this document defines the mapping and precedence; conformance is a console-implementation
+responsibility, not something this document performs itself.
 
 ## Adoption Guidance
 
-- External repository adoption is voluntary and incremental. AI Workbench's own
-  `WORKBENCH_STATE.md` migration is a planned later step within v0.9, subject to its own separate
-  authorization and review checkpoint — not part of this drafting step.
+- AI Workbench dogfoods this contract through its own `WORKBENCH_STATE.md`. External repository
+  adoption remains voluntary and incremental.
 - Satisfying only the four required fields already materially improves how legible a project's
   state is — the five optional fields add detail but are not a barrier to basic compliance.
 - No repository is ever required to add a schema/version marker or a closed Lifecycle Phase value —
@@ -188,29 +185,27 @@ behavior.
 - No console implementation — this document defines the contract only.
 - Does not standardize changelog or history tracking beyond the current-state snapshot.
 
-## Future Console-Integration Requirements
+## Console Integration Requirements
 
-Recorded here for the later, separately authorized implementation step within v0.9 that will align
-the console to this contract — it is not a separate milestone, and none of the following is done
-by this document:
+These are durable conformance requirements for any Workbench Console implementation — not
+requirements this document itself fulfills:
 
-- Console specification changes, console implementation changes, the persistent regression test
-  suite, and `WORKBENCH_STATE.md`'s structural migration must be delivered together, without an
-  intermediate commit that leaves the console unable to accurately self-report on ai-workbench's own
-  state file.
-- The regression test suite for this contract must be stored in the repository itself, written
-  using only the Python standard library — consistent with tools/console/workbench.py's existing
-  dependency-free discipline — not left only as an ephemeral scratchpad script.
-- Synthetic fixtures in that suite must cover: canonical headings only; legacy aliases only; both
-  present simultaneously (proving canonical-wins precedence); missing headings; empty headings; and
-  an explicitly unresolved Next Objective.
-- No external repository validation is required to complete that phase.
-- No schema-version marker is to be introduced during that phase either.
+- A console implementation, its specification, and its regression suite must stay in agreement at
+  every commit — no commit may leave the console unable to accurately self-report on this
+  repository's own state file.
+- The regression suite for this contract must be stored in the repository itself, written using
+  only the Python standard library — consistent with the console's dependency-free discipline —
+  never left only as an ephemeral scratchpad script.
+- The regression suite must cover: canonical headings only; every documented legacy alias;
+  canonical-over-alias precedence; missing headings; empty headings; and an explicitly unresolved
+  Next Objective.
+- External repository validation is never required for conformance with this Standard.
+- No schema-version marker is required or introduced by conformance with this Standard.
 
 ## Execution Reference
 
 CLAUDE.md determines whether an action related to drafting or applying this Standard is authorized
 to execute — this document does not redefine its tiers. docs/console-specification.md defines the
-console contract this Standard will align with during the later, separately authorized
-console-integration step within v0.9 — not restated here. workflows/repository-exploration.md's and
-workflows/development.md's Evidence Classification schemes are reused here, not redefined.
+console contract that implements this Standard — not restated here.
+workflows/repository-exploration.md's and workflows/development.md's Evidence Classification
+schemes are reused here, not redefined.
