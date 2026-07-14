@@ -41,7 +41,7 @@ itself an application.
 
 ## Current Milestone / Version
 
-v0.9 (in progress) — Project State Contract and Console Integration
+v0.9 (complete) — Project State Contract and Console Integration
 
 ## Lifecycle Phase
 
@@ -229,12 +229,43 @@ tooling) milestone by milestone.
   (file listing plus `git status`/`HEAD`) before and after the console ran against it, and the
   entire fixture root was deleted afterward, with removal independently confirmed.
 - v0.8 marked complete.
+- Defined standards/project-state.md — the Project State Contract Standard: nine canonical fields
+  (four required, five optional), evidence-label behavior reusing the existing four-label
+  vocabulary, missing/empty/unresolved/malformed handling, documented legacy aliases, and a fully
+  deterministic canonical-then-legacy-alias precedence algorithm (canonical wins if present even
+  when empty; first present alias in documented order wins even when empty; no undocumented
+  heading is ever recognized).
+- Integrated the contract into tools/console/workbench.py: canonical and legacy-alias heading
+  resolution for all nine fields, with docs/console-specification.md and the implementation kept in
+  exact agreement.
+- Built a persistent, stdlib-only regression suite (tools/console/tests/test_workbench.py, 32
+  tests: 14 inherited from v0.8 plus 18 new) covering canonical headings, every documented legacy
+  alias, canonical-over-alias precedence, missing headings, empty headings, and an explicitly
+  unresolved Next Objective. All 32 tests pass and leave no artifacts.
+- Migrated this file's own structure to the canonical headings with no project history lost, as the
+  Standard's first real adoption example.
+- Completed a documentation-durability pass: removed milestone-scoped ("future," "not yet built")
+  language from standards/project-state.md now that the contract is durable and current; corrected
+  stale "v0.8 MVP" wording in docs/console-specification.md by distinguishing genuinely historical
+  sections (e.g., "Criteria for Proceeding to v0.8," preserved unchanged) from current-capability
+  sections that needed updating.
+- Committed the Standard (0ea03b2, "Define project state contract") and the console
+  integration/migration/tests (979991f, "Integrate project state contract into console").
+- Performed the v0.9 manual acceptance exercise from a separate PowerShell terminal, independently
+  of the automated suite: against ai-workbench itself, all nine canonical project fields reported
+  `[Declared]`, exit code 0, and the repository was verified unchanged before and after. Against an
+  intentionally selected external test repository with no project-state file present, all nine
+  fields correctly reported `[Unknown]` (not a false `[Declared]` or a crash), exit code 0, and the
+  repository's dirty working tree (13 changed paths) was verified unchanged before and after,
+  confirming the console's zero-write guarantee holds against both a fully compliant and a
+  non-compliant repository. Both automated and manual acceptance criteria have now passed.
+- v0.9 marked complete.
 
 ## Current Objective
 
-Project State Contract console integration is implemented, tested, reviewed, and approved. The
-persistent 32-test regression suite (tools/console/tests/) passes. Manual acceptance remains
-pending. v0.9 remains in progress.
+v0.9 — Project State Contract and Console Integration — is complete. All automated acceptance
+criteria (the 32-test persistent regression suite) and the manual acceptance exercise (against
+ai-workbench and an external test repository) have passed. No further v0.9 work remains.
 
 ## Intended Outcome
 
@@ -296,6 +327,10 @@ as `[Declared]`; zero-write and all other v0.8 guarantees are preserved.
   stance ("Role") for meta-work on this workbench. Unresolved whether a consuming-project-facing
   Profile would duplicate that or address a genuinely different scope. Not urgent — no workflow
   step has hit this concretely yet.
+- **Publishing is currently blocked but local development is not**: main is eleven commits ahead of
+  origin/main, and the last manual push was rejected with HTTP 403 because GitHub authenticated as
+  Diego-Narvaez-Logitrac, which lacks permission to Santiagos-Vertigo/ai-workbench. Do not retry or
+  change authentication without separate authorization.
 
 ## Current Repository Structure
 
@@ -322,19 +357,21 @@ ai-workbench/
 
 ## Next Objective
 
-Perform the v0.9 manual acceptance exercise from a separate PowerShell terminal against
-ai-workbench and the intentionally selected logitrac test repository. Confirm correct canonical
-and unknown-state behavior and verify zero repository writes.
+Unresolved pending explicit selection. The strongest demonstrated candidate is Guardrail Modes and
+Recovery, but no next milestone has been authorized or started.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.9 is in progress; Phase 2 (console integration, persistent tests, structural
-   migration) is committed or ready to commit, and manual acceptance is next.
+4. Confirm v0.9 (Project State Contract and Console Integration) is complete — automated and manual
+   acceptance both passed. No next milestone is active; Guardrail Modes and Recovery is the
+   strongest demonstrated candidate but requires explicit user selection before any work begins.
 5. Before invoking any capability workflow or accessing another repository, run
    workflows/session-initialization.md first — this is a CLAUDE.md Core Rule, not optional.
 6. Review Blockers / Open Questions before touching workflows/repository-exploration.md's Prohibited
    Actions section.
-7. Ask what concrete task motivates the next change before proposing new files or folders.
+7. Do not push, or change GitHub authentication, without separate, explicit authorization — see
+   Blockers / Open Questions.
+8. Ask what concrete task motivates the next change before proposing new files or folders.
