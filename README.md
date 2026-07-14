@@ -8,8 +8,11 @@ This repository is **not an application** and **not a product**. It is the reusa
 framework — an Engineering Operating System — used across every software project, regardless of
 technology stack or AI vendor (Claude Code, Codex, ChatGPT, or whatever comes next).
 
-Projects **consume** this repository. They never become part of it, and it never contains
-application code.
+Projects **consume** this repository. They never become part of it. The repository does not contain
+the application code of projects operated through the Workbench. It may contain thin, optional,
+dependency-light operational tooling for the Workbench itself (see `tools/` below). That tooling
+remains non-authoritative and cannot redefine framework state, authorization, or workflow
+selection — the Markdown framework remains authoritative.
 
 The goal: sit at any machine, clone this repository alongside a project repository, launch an AI
 coding assistant, and immediately work under the same methodology — regardless of project or
@@ -58,4 +61,13 @@ The repository grows in layers, populated only as real usage demands.
 **Layer 2 — Content**
 Individual files within Layer 1 folders, added one at a time as a concrete, demonstrated need
 arises — never speculatively.
+
+**Optional Operational Tooling**
+
+`tools/` is not one of the Markdown capability layers above. It is optional, dependency-light
+tooling that helps operate the framework — reporting on framework and repository state — and is
+never authoritative. The Markdown framework (Layers 0–2 above) remains the sole source of truth for
+behavior, rules, and permission; `tools/` consumes and reports that state, never redefines it,
+never selects a workflow, and never grants authorization. Populated only when a concrete, validated
+need exists — the same discipline as every Layer 1 folder.
 

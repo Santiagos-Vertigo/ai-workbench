@@ -22,9 +22,9 @@ v0.5 — Development Workflow
 
 v0.6 — Code Review Workflow
 
-v0.7 — Technology Adapters
+v0.7 — Workbench Console Architecture and State Contract (specification only)
 
-v0.8 — Project Initialization
+v0.8 — Workbench Console MVP (read-only `status` command)
 
 v0.9 — Capability Composition
 
@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.6 (complete) — Session Initialization and Scope Control
+v0.7 (complete) — Workbench Console Architecture and State Contract
 
 ## Completed
 
@@ -136,18 +136,60 @@ v0.6 (complete) — Session Initialization and Scope Control
   no conflicting authorization model was introduced (the correction removed an internal ambiguity
   rather than adding a new rule surface); v0.1 through v0.5 history remains preserved and unaltered.
 - v0.6 marked complete.
+- Assessed a candidate v0.7 (Workbench Console) direction: found that a terminal console is
+  executable application code with no existing Layer 1 folder to hold it, directly in tension with
+  README's "not an application... never contains application code" statement — a Layer-0 identity
+  question, not a routine content addition. Recommended splitting into a specification milestone
+  (v0.7) and an implementation milestone (v0.8), and resolving the tension explicitly rather than
+  silently proceeding either way.
+- Resolved the tension: this repository may contain thin, optional, dependency-light operational
+  tooling (`tools/`) that reports framework and repository state without becoming the source of
+  truth, redefining authorization, or selecting workflows. The Markdown framework remains
+  authoritative. Recorded in README.md's "What this is" section and a new "Optional Operational
+  Tooling" note in the Architecture section.
+- Created docs/console-specification.md — the first justified docs/ artifact — defining the
+  console's purpose, its non-authoritative relationship to the framework, command syntax, required
+  arguments, a 20-field State Discovery Contract (with an explicit, ordered project-state file
+  discovery list and four evidence labels: `[Verified]`, `[Declared]`, `[Unknown]`,
+  `[Stale Possible]`), exact output format, error behavior for nine distinct conditions, a zero-write
+  requirement, security/scope restrictions, MVP exclusions, validation scenarios, criteria for
+  proceeding to v0.8, and future boundaries (Claude launching, workflow recommendation, session
+  history, Profiles, multiple agents, persistent monitoring — all explicitly deferred).
+- Reconciled the roadmap: v0.7 relabeled "Workbench Console Architecture and State Contract
+  (specification only)"; v0.8 relabeled "Workbench Console MVP (read-only `status` command)",
+  replacing the stale "Technology Adapters"/"Project Initialization" placeholders.
+- No Python or PowerShell code written; tools/ not created — both explicitly deferred to v0.8.
+- Completion review of v0.7 applied five final corrections: (1) corrected README's identity
+  language, which read as contradictory between "never contains application code" and "may contain
+  thin, optional tooling" — now explicitly distinguishes application code of projects operated
+  through the Workbench (never here) from operational tooling for the Workbench itself (may live
+  under `tools/`, non-authoritative); (2) resolved the v0.8 MVP statelessness question — stdout/
+  stderr only, with an explicit list of prohibited write targets, and future persistent state/
+  caching/history/configuration requires its own separately approved milestone; (3) strengthened the
+  Git read-only contract with explicit subprocess safeguards (no fetch, no push, no auth, disabled
+  credential prompts, disabled optional locks/index-refresh, disabled lazy fetch,
+  `GIT_OPTIONAL_LOCKS=0` / `GIT_TERMINAL_PROMPT=0` / `GIT_NO_LAZY_FETCH=1` as v0.8 requirements, not
+  yet implemented); (4) clarified state-file precedence — `WORKBENCH_STATE.md` wins if both exist,
+  and a malformed higher-priority file is never silently replaced by the secondary file, since that
+  could conceal a broken authoritative state file; (5) labeled the output template as structural,
+  not a fixed or permanently expected example.
+- Revalidated the complete specification against all sixteen required elements (identity, Git
+  state, phase, milestone/version, current/next objectives, blockers, instruction/state sources,
+  assistant/workflow/Profile state, authorization state, evidence labels, stop condition, error/exit
+  behavior, zero persistent writes, no network access, no inferred repository, no automatic workflow
+  selection or AI launch) — all present.
+- v0.7 marked complete.
 
 ## Current Status
 
-v0.6 — Session Initialization and Scope Control is complete. workflows/session-initialization.md
-exists and CLAUDE.md carries one Core Rule making it discoverable and mandatory before any
-capability workflow runs or any other repository is accessed, with the scope-vs-action ambiguity
-found and corrected during completion review. Validated entirely inside ai-workbench via four exact
-simulated scenarios (A–D), all passing. No external repository was accessed during this milestone.
-Both prior open architectural questions (authorization detail placement; communication-style
-calibration) remain unresolved and are carried forward unchanged. No Profile requirement was
-demonstrated; profiles/ remains intentionally absent. CLAUDE.md remains the sole authority for
-execution permission.
+v0.7 — Workbench Console Architecture and State Contract is complete.
+docs/console-specification.md is the completed deliverable, and README.md recognizes the optional,
+non-authoritative `tools/` tooling layer with corrected identity language. v0.6 — Session
+Initialization and Scope Control remains complete and untouched. No external repository was
+accessed. `tools/` does not exist yet; no code was written. Both prior open architectural questions
+(authorization detail placement; communication-style calibration) remain unresolved and are carried
+forward unchanged. No Profile requirement was demonstrated by this milestone. CLAUDE.md remains the
+sole authority for execution permission and was not modified this milestone.
 
 ## Architectural Decisions
 
@@ -203,6 +245,8 @@ ai-workbench/
 ├── README.md
 ├── CLAUDE.md
 ├── WORKBENCH_STATE.md
+├── docs/
+│   └── console-specification.md
 ├── standards/
 │   └── git.md
 └── workflows/
@@ -211,23 +255,27 @@ ai-workbench/
     └── session-initialization.md
 ```
 
+`tools/` does not exist yet — described conceptually in README.md, instantiated only at v0.8.
+
 ## Next Objective
 
-Unresolved / awaiting selection. v0.6 is complete; no next milestone has been chosen. The roadmap's
-placeholder naming "v0.6 — Code Review Workflow" no longer matches what v0.6 actually became
-(Session Initialization and Scope Control) — this is a stale label, not a commitment; do not treat
-it as the automatic next objective. Do not invent or begin v0.7 speculatively. Do not create
-profiles/, adapters/, or templates/ — no Profile requirement has been demonstrated. Do not commit or
-push until separately authorized.
+Proposed, not started: v0.8 — Read-Only Workbench Console MVP, implementing exactly
+docs/console-specification.md's State Discovery Contract via `workbench status <repository-path>`.
+v0.8 is not marked in progress and must not begin until separately authorized — do not write Python
+or PowerShell code, and do not create tools/, until then. Do not create profiles/, adapters/, or
+templates/ — no Profile requirement has been demonstrated. Do not access Logitrac or any other
+external repository. Do not commit or push until separately authorized.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
-3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.6 is complete and no next milestone has been approved or started.
+3. Confirm no new Layer 1 structure has been added speculatively — profiles/ and tools/ still do
+   not exist.
+4. Confirm v0.7 is complete and v0.8 (Read-Only Workbench Console MVP) is only proposed, not
+   started or in progress.
 5. Before invoking any capability workflow or accessing another repository, run
-   workflows/session-initialization.md first — this is now a CLAUDE.md Core Rule, not optional.
+   workflows/session-initialization.md first — this is a CLAUDE.md Core Rule, not optional.
 6. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
-   Actions section or creating a docs/ directory.
+   Actions section.
 7. Ask what concrete task motivates the next change before proposing new files or folders.
