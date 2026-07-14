@@ -105,7 +105,7 @@ applies, it truncates at a word boundary with a visible ellipsis.
 
 1. **Repository identity** — the directory name (basename of the resolved path) `[Verified]`. If
    `README.md` exists, its first heading line may be shown alongside as a labeled source excerpt
-   (`README heading (source excerpt)`), never presented as a verified or inferred purpose.
+   (`README Heading`), never presented as a verified or inferred purpose.
 2. **Resolved repository path** — the absolute, normalized form of the argument `[Verified]`.
 3. **Git branch** — from `git branch --show-current` `[Verified]`. If HEAD is detached, reported
    explicitly as `detached HEAD`, never left blank.
@@ -164,44 +164,95 @@ applies, it truncates at a word boundary with a visible ellipsis.
 20. **Stop condition** — `[Verified]`, for the same reason as item 19: the command has completed and
     exited; no process remains running. The console is single-shot, never a background process.
 
-## 8. Exact Output Fields and Evidence Labels
+## 8. Output Presentation Contract
+
+Output is grouped into seven titled sections, in this order, each containing the fields listed:
+
+1. **REPOSITORY** — Repository Identity, README Heading (if `README.md` exists), Resolved
+   Repository Path.
+2. **GIT** — Branch, HEAD Commit, Working-Tree Condition, Ahead/Behind Upstream, Remote Freshness.
+3. **PROJECT** — Project Phase, Current Milestone/Version, Current Objective, Completed Work
+   (excerpt), Next Objective.
+4. **BLOCKERS / OPEN QUESTIONS** — Blockers / Unresolved Questions.
+5. **CONFIG** — Instruction Files Found, Project-State File Used, and, only when the higher-priority
+   state file could not be read or parsed, State Source Problem.
+6. **SESSION** — Active Assistant, Active Workflow, Active Profile.
+7. **RESULT** — Authorization State, Stop Condition.
+
+Every field from the State Discovery Contract above appears exactly once, in the section it
+semantically belongs to. Splitting fields into sections changes nothing about how they are
+discovered, parsed, classified, or truncated — it is presentation only.
+
+**Alignment:** within each section, field labels are aligned to that section's own longest label —
+not aligned across sections. A section-context label may drop a redundant prefix implied by the
+section title (e.g. "Git Branch" becomes "Branch" inside GIT; "Repository-Local Instruction Files
+Found" becomes "Instruction Files Found" inside CONFIG) without changing the field's meaning or
+evidence label.
+
+**Wrapping:** a value too long for the terminal wraps onto further lines whose continuation begins
+under the *value* column (immediately after the label and its separator), never under the label.
+Wrapping adapts to the terminal's actual width (with a reasonable fallback when none is detected);
+this specification does not mandate one fixed column width or exact whitespace — only that
+continuation lines align under the value, sections stay in the order above, and no field, meaning,
+or evidence label changes as a result of how a given terminal happens to wrap it.
+
+**Never hidden for visual cleanliness:** `Unknown` values, `[Stale Possible]` staleness, a dirty
+working tree, blockers/open questions, and the Authorization State line must always be shown in
+full — grouping and alignment are cosmetic and must never cause a field to be omitted, truncated
+beyond the existing excerpt rule, or softened.
+
+Illustrative shape (structural — exact spacing, terminal width, and the concrete values shown are
+not part of the contract; only the sections, fields, order, and evidence labels are):
 
 ```
-Workbench Console — Status Report
+Workbench Status — <repository-identity>
 
-Repository Identity: <directory name> [Verified]
-  README heading (source excerpt): "<text>" [Verified] — not a verified or inferred purpose
-Resolved Repository Path: <absolute path> [Verified]
+REPOSITORY
+  Repository Identity      : <directory name> [Verified]
+  README Heading           : "<text>" [Verified] — source excerpt, not a verified or inferred
+                              purpose
+  Resolved Repository Path : <absolute path> [Verified]
 
-Git Branch: <branch | "detached HEAD"> [Verified]
-HEAD Commit: <short hash> <subject> [Verified]
-Working-Tree Condition: <clean | dirty (n changed paths)> [Verified]
-Ahead/Behind Upstream: <n ahead, m behind | "no upstream configured"> [Stale Possible]
-Remote Freshness: No fetch was performed. Ahead/behind reflects local remote-tracking refs only.
+GIT
+  Branch                  : <branch | "detached HEAD"> [Verified]
+  HEAD Commit             : <short hash> <subject> [Verified]
+  Working-Tree Condition  : <clean | dirty (n changed paths)> [Verified]
+  Ahead/Behind Upstream   : <n ahead, m behind | "no upstream configured"> [Stale Possible]
+  Remote Freshness        : No fetch was performed; ahead/behind reflects local remote-tracking
+                            refs only.
 
-Project Phase: <value> [Declared]  |  Unknown [Unknown]
-Current Milestone/Version: <value> [Declared]  |  [Unknown]
-Current Objective: <value> [Declared]  |  [Unknown]
-Completed Work (excerpt): <value> [Declared]  |  [Unknown]
-Next Objective: <value> [Declared]  |  [Unknown]
-Known Blockers/Unresolved Questions: <value> [Declared]  |  [Unknown]
+PROJECT
+  Project Phase              : <value> [Declared]  |  Unknown [Unknown]
+  Current Milestone/Version  : <value> [Declared]  |  [Unknown]
+  Current Objective          : <value> [Declared]  |  [Unknown]
+  Completed Work (excerpt)   : <value> [Declared]  |  [Unknown]
+  Next Objective              : <value> [Declared]  |  [Unknown]
 
-Repository-Local Instruction Files Found: <list> [Verified]
-Project-State File Used: <filename> [Verified]  |  "None found" [Unknown]
+BLOCKERS / OPEN QUESTIONS
+  Blockers / Unresolved Questions : <value> [Declared]  |  [Unknown]
 
-Active Assistant: <value> [Declared]  |  Unknown [Unknown]
-Active Workflow: <value> [Declared]  |  Unknown [Unknown]
-Active Profile: <value> [Declared]  |  Unknown [Unknown]
+CONFIG
+  Instruction Files Found : <list> [Verified]
+  Project-State File Used : <filename> [Verified]  |  "None found" [Unknown]
+  State Source Problem    : <message>   (only present if the higher-priority state file was
+                             found but could not be read or parsed)
 
-Authorization State: Report-only console operation; this command did not modify files, launch an
-assistant, select a workflow, or activate a Profile. [Verified]
-Stop Condition: Command complete; no process remains running. [Verified]
+SESSION
+  Active Assistant : <value> [Declared]  |  Unknown [Unknown]
+  Active Workflow  : <value> [Declared]  |  Unknown [Unknown]
+  Active Profile   : <value> [Declared]  |  Unknown [Unknown]
+
+RESULT
+  Authorization State : Report-only console operation; this command did not modify files, launch
+                        an assistant, select a workflow, or activate a Profile. [Verified]
+  Stop Condition       : Command complete; no process remains running. [Verified]
 ```
 
 This is a structural template, not a fixed or permanently expected output. Any concrete, filled-in
-example shown elsewhere (in review, discussion, or documentation) using a real path, commit hash, or
-dirty-tree count must be explicitly labeled illustrative and is not authoritative — actual output
-always reflects the state at the moment a given invocation ran.
+example shown elsewhere (in review, discussion, or documentation) using a real path, commit hash,
+dirty-tree count, or exact column spacing must be explicitly labeled illustrative and is not
+authoritative — actual output always reflects the state at the moment a given invocation ran, and
+its exact spacing depends on the terminal it ran in.
 
 ## 9. Error Behavior
 

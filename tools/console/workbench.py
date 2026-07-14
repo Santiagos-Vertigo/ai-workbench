@@ -18,7 +18,9 @@ del _stream
 
 import os
 import re
+import shutil
 import subprocess
+import textwrap
 from pathlib import Path
 
 PROGRAM = "workbench.py"
@@ -234,23 +236,52 @@ def readme_heading(repo_path: Path) -> str | None:
     return None
 
 
-def field(name: str, value: str, tag: str) -> str:
-    return f"{name}: {value} [{tag}]"
+def value_with_tag(value: str, tag: str) -> str:
+    return f"{value} [{tag}]"
 
 
-def declared_or_unknown_line(name: str, value: str | None) -> str:
+def declared_or_unknown(value: str | None) -> str:
     if value:
-        return f"{name}: {value} [Declared]"
-    return f"{name}: [Unknown]"
+        return f"{value} [Declared]"
+    return "[Unknown]"
 
 
-def declared_or_unknown_literal(name: str, value: str | None) -> str:
-    """Like declared_or_unknown_line, but shows the literal word 'Unknown' as the value —
+def declared_or_unknown_literal(value: str | None) -> str:
+    """Like declared_or_unknown, but shows the literal word 'Unknown' as the value —
     used for fields the console has no basis to leave silently blank about: Project Phase
     and the three external-session fields (assistant, workflow, Profile)."""
     if value:
-        return f"{name}: {value} [Declared]"
-    return f"{name}: Unknown [Unknown]"
+        return f"{value} [Declared]"
+    return "Unknown [Unknown]"
+
+
+def render_section(title: str, entries: list[tuple[str, str]]) -> list[str]:
+    """Render one titled block of "Label : value [Tag]" lines.
+
+    Labels are aligned within this section only (not globally). A value too long for
+    the terminal wraps onto further lines whose continuation begins under the value
+    column, never under the label — cosmetic spacing adapts to terminal width; the
+    fields, their meaning, and their evidence labels never change as a result.
+    """
+    if not entries:
+        return [title, ""]
+    label_width = max(len(label) for label, _ in entries)
+    terminal_width = shutil.get_terminal_size(fallback=(100, 24)).columns
+    wrap_width = max(terminal_width - 2, 40)
+    out = [title]
+    for label, text in entries:
+        prefix = f"  {label.ljust(label_width)} : "
+        wrapped = textwrap.wrap(
+            text,
+            width=wrap_width,
+            initial_indent=prefix,
+            subsequent_indent=" " * len(prefix),
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        out.extend(wrapped or [prefix.rstrip()])
+    out.append("")
+    return out
 
 
 def cmd_status(repo_arg: str) -> int:
@@ -265,88 +296,100 @@ def cmd_status(repo_arg: str) -> int:
         return 1
 
     resolved = raw_path.resolve()
-    lines: list[str] = ["Workbench Console — Status Report", ""]
+    lines: list[str] = [f"Workbench Status — {resolved.name}", ""]
 
-    lines.append(field("Repository Identity", resolved.name, "Verified"))
+    repo_entries: list[tuple[str, str]] = [
+        ("Repository Identity", value_with_tag(resolved.name, "Verified")),
+    ]
     heading = readme_heading(resolved)
     if heading:
-        lines.append(
-            f'  README heading (source excerpt): "{heading}" [Verified] '
-            "— not a verified or inferred purpose"
+        repo_entries.append(
+            (
+                "README Heading",
+                f'"{heading}" [Verified] — source excerpt, not a verified or inferred purpose',
+            )
         )
-    lines.append(field("Resolved Repository Path", str(resolved), "Verified"))
-    lines.append("")
+    repo_entries.append(("Resolved Repository Path", value_with_tag(str(resolved), "Verified")))
+    lines += render_section("REPOSITORY", repo_entries)
 
     if not git_is_repository(resolved):
         lines.append("Not a Git repository — Git fields unavailable")
         print("\n".join(lines))
         return 1
 
-    lines.append(field("Git Branch", git_branch(resolved), "Verified"))
-    lines.append(field("HEAD Commit", git_head_commit(resolved), "Verified"))
-    lines.append(field("Working-Tree Condition", git_working_tree(resolved), "Verified"))
-    lines.append(field("Ahead/Behind Upstream", git_ahead_behind(resolved), "Stale Possible"))
-    lines.append(
-        "Remote Freshness: No fetch was performed. Ahead/behind reflects local "
-        "remote-tracking refs only."
+    lines += render_section(
+        "GIT",
+        [
+            ("Branch", value_with_tag(git_branch(resolved), "Verified")),
+            ("HEAD Commit", value_with_tag(git_head_commit(resolved), "Verified")),
+            ("Working-Tree Condition", value_with_tag(git_working_tree(resolved), "Verified")),
+            ("Ahead/Behind Upstream", value_with_tag(git_ahead_behind(resolved), "Stale Possible")),
+            (
+                "Remote Freshness",
+                "No fetch was performed; ahead/behind reflects local remote-tracking "
+                "refs only.",
+            ),
+        ],
     )
-    lines.append("")
 
     state_file, sections, problem = read_state_file(resolved)
 
-    lines.append(declared_or_unknown_literal("Project Phase", project_phase(sections)))
+    project_entries: list[tuple[str, str]] = [
+        ("Project Phase", declared_or_unknown_literal(project_phase(sections))),
+    ]
     if problem:
-        lines.append(f"State Source Problem: {problem}")
         for name in [
             "Current Milestone/Version",
             "Current Objective",
             "Completed Work (excerpt)",
             "Next Objective",
-            "Known Blockers/Unresolved Questions",
         ]:
-            lines.append(f"{name}: [Unknown]")
+            project_entries.append((name, "[Unknown]"))
+        blockers_value: str | None = None
     else:
-        lines.append(
-            declared_or_unknown_line(
-                "Current Milestone/Version", declared_field(sections, "Current Version")
+        project_entries.append(
+            (
+                "Current Milestone/Version",
+                declared_or_unknown(declared_field(sections, "Current Version")),
             )
         )
-        lines.append(
-            declared_or_unknown_line(
-                "Current Objective", declared_field(sections, "Current Status")
+        project_entries.append(
+            ("Current Objective", declared_or_unknown(declared_field(sections, "Current Status")))
+        )
+        project_entries.append(
+            (
+                "Completed Work (excerpt)",
+                declared_or_unknown(declared_field(sections, "Completed")),
             )
         )
-        lines.append(
-            declared_or_unknown_line(
-                "Completed Work (excerpt)", declared_field(sections, "Completed")
+        project_entries.append(
+            (
+                "Next Objective",
+                declared_or_unknown(declared_field(sections, "Next Objective")),
             )
         )
-        lines.append(
-            declared_or_unknown_line(
-                "Next Objective", declared_field(sections, "Next Objective")
-            )
-        )
-        lines.append(
-            declared_or_unknown_line(
-                "Known Blockers/Unresolved Questions",
-                declared_field(sections, "Open Questions"),
-            )
-        )
-    lines.append("")
+        blockers_value = declared_field(sections, "Open Questions")
+    lines += render_section("PROJECT", project_entries)
+
+    lines += render_section(
+        "BLOCKERS / OPEN QUESTIONS",
+        [("Blockers / Unresolved Questions", declared_or_unknown(blockers_value))],
+    )
 
     found = find_instruction_files(resolved)
-    lines.append(
-        field(
-            "Repository-Local Instruction Files Found",
-            ", ".join(found) if found else "none",
-            "Verified",
-        )
-    )
-    if state_file:
-        lines.append(field("Project-State File Used", state_file, "Verified"))
-    else:
-        lines.append('Project-State File Used: "None found" [Unknown]')
-    lines.append("")
+    config_entries: list[tuple[str, str]] = [
+        (
+            "Instruction Files Found",
+            value_with_tag(", ".join(found) if found else "none", "Verified"),
+        ),
+        (
+            "Project-State File Used",
+            value_with_tag(state_file, "Verified") if state_file else '"None found" [Unknown]',
+        ),
+    ]
+    if problem:
+        config_entries.append(("State Source Problem", problem))
+    lines += render_section("CONFIG", config_entries)
 
     # A stateless, independent invocation cannot know whether an assistant, workflow, or
     # Profile is active in the surrounding session — it can only report what a recognized
@@ -354,18 +397,29 @@ def cmd_status(repo_arg: str) -> int:
     assistant_value = declared_field(sections, "Active Assistant") if not problem else None
     workflow_value = declared_field(sections, "Active Workflow") if not problem else None
     profile_value = declared_field(sections, "Active Profile") if not problem else None
-    lines.append(declared_or_unknown_literal("Active Assistant", assistant_value))
-    lines.append(declared_or_unknown_literal("Active Workflow", workflow_value))
-    lines.append(declared_or_unknown_literal("Active Profile", profile_value))
-    lines.append("")
+    lines += render_section(
+        "SESSION",
+        [
+            ("Active Assistant", declared_or_unknown_literal(assistant_value)),
+            ("Active Workflow", declared_or_unknown_literal(workflow_value)),
+            ("Active Profile", declared_or_unknown_literal(profile_value)),
+        ],
+    )
 
-    lines.append(
-        "Authorization State: Report-only console operation; this command did not modify "
-        "files, launch an assistant, select a workflow, or activate a Profile. [Verified]"
+    lines += render_section(
+        "RESULT",
+        [
+            (
+                "Authorization State",
+                "Report-only console operation; this command did not modify files, "
+                "launch an assistant, select a workflow, or activate a Profile. [Verified]",
+            ),
+            ("Stop Condition", "Command complete; no process remains running. [Verified]"),
+        ],
     )
-    lines.append(
-        "Stop Condition: Command complete; no process remains running. [Verified]"
-    )
+    # Drop the trailing blank line render_section adds after the last section.
+    if lines and lines[-1] == "":
+        lines.pop()
 
     print("\n".join(lines))
     return 0
