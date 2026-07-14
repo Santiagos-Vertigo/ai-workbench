@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.7 (complete) — Workbench Console Architecture and State Contract
+v0.8 (complete) — Read-Only Workbench Console MVP
 
 ## Completed
 
@@ -179,17 +179,60 @@ v0.7 (complete) — Workbench Console Architecture and State Contract
   behavior, zero persistent writes, no network access, no inferred repository, no automatic workflow
   selection or AI launch) — all present.
 - v0.7 marked complete.
+- Verified Python 3 availability (3.14.4) via read-only version commands before implementing.
+- Created tools/console/workbench.py — the first v0.8 artifact: a single, stdlib-only, stateless,
+  read-only status reporter implementing docs/console-specification.md's `status` command exactly,
+  including the 20-field State Discovery Contract, four evidence labels, the fixed
+  WORKBENCH_STATE.md-then-PROJECT_STATE.md discovery order with no fallback on a malformed
+  higher-priority file, and the specified Git subprocess safeguards
+  (`GIT_OPTIONAL_LOCKS=0`, `GIT_TERMINAL_PROMPT=0`, `GIT_NO_LAZY_FETCH=1`, no stdin, no shell
+  construction). `sys.dont_write_bytecode = True` is set before any other import.
+- Applied a targeted correctness and validation pass before completion:
+  - Fixed multiline declared-field extraction — the console previously read only the first
+    physical (wrapped) source line of a Markdown section, producing truncated excerpts like
+    "tools/console/workbench.py exists and". It now extracts the first complete paragraph or
+    list item, joining wrapped lines with normalized spaces and stopping only at a blank line
+    or the next structural block, truncating at a word boundary with an ellipsis when a length
+    cap applies.
+  - Corrected Project Phase semantics — it no longer derives phase from the parenthetical
+    milestone status in Current Version ("in progress"/"complete" are milestone statuses, not
+    project phases). It now reports `[Declared]` only from an explicit "Project Phase" or
+    "Current Phase" field, otherwise "Unknown [Unknown]".
+  - Corrected stateless session-state reporting — Active Assistant, Active Workflow, and Active
+    Profile no longer hardcode "not launched" / "not selected" / "none configured" as if the
+    console had knowledge of the surrounding session; a stateless invocation cannot know that.
+    They now report `[Declared]` only from an explicit state-file field, otherwise
+    "Unknown [Unknown]". Authorization State and Stop Condition are now explicitly labeled
+    `[Verified]` and Authorization State separately, truthfully states that this command's own
+    execution did not launch an assistant, select a workflow, or activate a Profile — without
+    presenting that as knowledge of the external session.
+  - Updated docs/console-specification.md to match all three corrections (items 8, 16–20, and
+    the output template) so the specification and implementation agree.
+- Ran the complete synthetic acceptance validation (14 scenarios: A–M plus the two missing-argument
+  cases) using temporary fixtures created solely under the OS temp directory via Python's
+  `tempfile`, with local-only Git identity, no remotes, and no network operation — including a
+  clean repository with a locally configured upstream constructed via one local branch tracking
+  another (zero `git remote` configured, proving ahead/behind reporting without any remote at
+  all). All 14 scenarios passed. Every synthetic Git fixture was verified byte-for-byte unchanged
+  (file listing plus `git status`/`HEAD`) before and after the console ran against it, and the
+  entire fixture root was deleted afterward, with removal independently confirmed.
+- v0.8 marked complete.
 
 ## Current Status
 
-v0.7 — Workbench Console Architecture and State Contract is complete.
-docs/console-specification.md is the completed deliverable, and README.md recognizes the optional,
-non-authoritative `tools/` tooling layer with corrected identity language. v0.6 — Session
-Initialization and Scope Control remains complete and untouched. No external repository was
-accessed. `tools/` does not exist yet; no code was written. Both prior open architectural questions
-(authorization detail placement; communication-style calibration) remain unresolved and are carried
-forward unchanged. No Profile requirement was demonstrated by this milestone. CLAUDE.md remains the
-sole authority for execution permission and was not modified this milestone.
+v0.8 — Read-Only Workbench Console MVP is complete. tools/console/workbench.py implements the
+`status` command exactly per docs/console-specification.md (both now in agreement after this
+milestone's correctness pass), validated by 14 synthetic acceptance scenarios covering the
+self-report, argument errors, non-Git and no-state-file cases, state-file precedence and
+malformed-file handling, detached HEAD, missing upstream, dirty tree, and a locally-tracked
+upstream with zero Git remotes configured — all passing, with proven zero-write behavior and
+complete fixture cleanup. v0.7 remains complete and untouched. No external repository was accessed.
+The next action is to run and evaluate the console manually in real use before any launcher
+functionality is considered — no next milestone (v0.9 or otherwise) has been proposed or started.
+Both prior open architectural questions (authorization detail placement; communication-style
+calibration) remain unresolved and are carried forward unchanged. No Profile requirement was
+demonstrated by this milestone. CLAUDE.md remains the sole authority for execution permission and
+was not modified this milestone.
 
 ## Architectural Decisions
 
@@ -249,20 +292,21 @@ ai-workbench/
 │   └── console-specification.md
 ├── standards/
 │   └── git.md
+├── tools/
+│   └── console/
+│       └── workbench.py
 └── workflows/
     ├── development.md
     ├── repository-exploration.md
     └── session-initialization.md
 ```
 
-`tools/` does not exist yet — described conceptually in README.md, instantiated only at v0.8.
-
 ## Next Objective
 
-Proposed, not started: v0.8 — Read-Only Workbench Console MVP, implementing exactly
-docs/console-specification.md's State Discovery Contract via `workbench status <repository-path>`.
-v0.8 is not marked in progress and must not begin until separately authorized — do not write Python
-or PowerShell code, and do not create tools/, until then. Do not create profiles/, adapters/, or
+Unresolved, pending real usage. v0.8 is complete; no next milestone (v0.9 or otherwise) has been
+proposed or started. The next action is to run and evaluate tools/console/workbench.py manually, in
+real use, before any launcher functionality, workflow recommendation, or persistent state is
+considered — none of those are authorized by this milestone. Do not create profiles/, adapters/, or
 templates/ — no Profile requirement has been demonstrated. Do not access Logitrac or any other
 external repository. Do not commit or push until separately authorized.
 
@@ -270,10 +314,9 @@ external repository. Do not commit or push until separately authorized.
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
-3. Confirm no new Layer 1 structure has been added speculatively — profiles/ and tools/ still do
-   not exist.
-4. Confirm v0.7 is complete and v0.8 (Read-Only Workbench Console MVP) is only proposed, not
-   started or in progress.
+3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
+4. Confirm v0.8 is complete and no next milestone has been proposed or started; the next step is
+   manual, real-world use of tools/console/workbench.py before anything further is designed.
 5. Before invoking any capability workflow or accessing another repository, run
    workflows/session-initialization.md first — this is a CLAUDE.md Core Rule, not optional.
 6. Review Open Questions before touching workflows/repository-exploration.md's Prohibited

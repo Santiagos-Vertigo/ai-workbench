@@ -94,6 +94,13 @@ invent a development stage, and does not silently treat `README.md` as structure
 `README.md` information is surfaced at all, it is labeled a **source excerpt**, never an inferred
 purpose — a README does not constitute declared project state.
 
+Wherever a field below is described as an "excerpt," it means the first complete paragraph, or
+first complete list item, beneath the relevant heading — Markdown-wrapped physical lines are joined
+with normalized spaces, and extraction stops only at a blank line or the next structural block
+(the next list item, or the next heading), never merely because the source text wrapped to another
+physical line. An excerpt still never reproduces an entire long section; if a maximum length
+applies, it truncates at a word boundary with a visible ellipsis.
+
 ### The 20 fields
 
 1. **Repository identity** — the directory name (basename of the resolved path) `[Verified]`. If
@@ -110,10 +117,14 @@ purpose — a README does not constitute declared project state.
    not attempted or guessed.
 7. **Remote freshness limitation** — a standing disclaimer shown whenever item 6 is shown: no fetch
    is ever performed, so ahead/behind reflects local remote-tracking refs only.
-8. **Project phase** — `[Declared]` from the state file's own phase/version/status field if present;
-   `[Unknown]` otherwise. Never derived from Git history.
+8. **Project phase** — `[Declared]` only from an explicit `Project Phase` or `Current Phase`
+   heading/field in the state file; otherwise reported as `Unknown` `[Unknown]`. A milestone status
+   such as "in progress" or "complete" is **not** a project phase and must never be read out of the
+   Current Version field to populate this — phase and milestone status are different facts. Never
+   derived from Git history.
 9. **Current milestone or version** — `[Declared]` from the state file's own version/milestone
-   field; `[Unknown]` otherwise.
+   field (e.g. "v0.8 (in progress)"); `[Unknown]` otherwise. This may legitimately contain a status
+   word — it is milestone status, not project phase.
 10. **Current objective** — `[Declared]` from the state file's current-status/objective field;
     `[Unknown]` otherwise.
 11. **Completed work** — `[Declared]`, a short excerpt (not a full reproduction) of the state
@@ -130,21 +141,28 @@ purpose — a README does not constitute declared project state.
     populate items 8–13, chosen via the discovery order above. If none matched: `[Unknown]`, "no
     recognized state file found," and items 8–13 all report `[Unknown]` accordingly — never
     silently substitutes `README.md`.
-16. **Active assistant** — `not launched`, `Claude`, `Codex`, or another explicitly selected tool.
-    MVP always reports `not launched`, since v0.8 never launches anything; never inferred from
-    environment variables or running processes.
-17. **Active workflow** — `not selected` or `explicitly declared`, never inferred by the console.
-    MVP always reports `not selected` — recommending or selecting a workflow remains the AI
-    session's job via workflows/session-initialization.md.
-18. **Active Profile** — `none configured` or `explicitly declared`, never invented. MVP always
-    reports `none configured`, since `profiles/` does not exist; even after `profiles/` exists, the
-    console may only report a Profile if a repository explicitly declares one through a mechanism
-    defined separately — none exists yet.
-19. **Authorization state** — a fixed statement: report-only console operation, no files modified,
-    no additional action authorized by this command. Not derived from repository content — a
-    statement of what the console itself just did.
-20. **Stop condition** — a fixed statement: the command has completed and exited; no process
-    remains running; re-run to refresh. The console is single-shot, never a background process.
+16. **Active assistant** — `[Declared]` only if an `Active Assistant` field/heading is explicitly
+    present in the recognized state file; otherwise `Unknown` `[Unknown]`. A stateless, independent
+    invocation of the console has no way to know whether Claude, Codex, or another assistant is
+    already running in the surrounding session — it must never guess, and must never report
+    `not launched` as if that were a verified fact about that external session. (The console may
+    separately, truthfully state that *this command's own execution* did not launch an assistant —
+    see Authorization State below — but that is a fact about itself, not knowledge of the session.)
+17. **Active workflow** — `[Declared]` only if an `Active Workflow` field/heading is explicitly
+    present in the recognized state file; otherwise `Unknown` `[Unknown]`, for the same reason as
+    item 16. Recommending or selecting a workflow remains the AI session's job via
+    workflows/session-initialization.md; the console never infers this.
+18. **Active Profile** — `[Declared]` only if an `Active Profile` field/heading is explicitly
+    present in the recognized state file; otherwise `Unknown` `[Unknown]`, for the same reason as
+    item 16. `profiles/` does not exist yet; even after it does, the console may only report a
+    Profile a repository explicitly declares — never invented, never assumed absent.
+19. **Authorization state** — `[Verified]`, since this is a fact the program controls about its own
+    execution, not repository content: report-only console operation; this command did not modify
+    files, launch an assistant, select a workflow, or activate a Profile. This is a statement about
+    what the command itself just did — it must not be read as knowledge of the surrounding session
+    (see items 16–18).
+20. **Stop condition** — `[Verified]`, for the same reason as item 19: the command has completed and
+    exited; no process remains running. The console is single-shot, never a background process.
 
 ## 8. Exact Output Fields and Evidence Labels
 
@@ -161,7 +179,7 @@ Working-Tree Condition: <clean | dirty (n changed paths)> [Verified]
 Ahead/Behind Upstream: <n ahead, m behind | "no upstream configured"> [Stale Possible]
 Remote Freshness: No fetch was performed. Ahead/behind reflects local remote-tracking refs only.
 
-Project Phase: <value> [Declared]  |  [Unknown]
+Project Phase: <value> [Declared]  |  Unknown [Unknown]
 Current Milestone/Version: <value> [Declared]  |  [Unknown]
 Current Objective: <value> [Declared]  |  [Unknown]
 Completed Work (excerpt): <value> [Declared]  |  [Unknown]
@@ -171,13 +189,13 @@ Known Blockers/Unresolved Questions: <value> [Declared]  |  [Unknown]
 Repository-Local Instruction Files Found: <list> [Verified]
 Project-State File Used: <filename> [Verified]  |  "None found" [Unknown]
 
-Active Assistant: not launched
-Active Workflow: not selected
-Active Profile: none configured
+Active Assistant: <value> [Declared]  |  Unknown [Unknown]
+Active Workflow: <value> [Declared]  |  Unknown [Unknown]
+Active Profile: <value> [Declared]  |  Unknown [Unknown]
 
-Authorization State: Report-only console operation. No files modified. No additional action
-authorized by this command.
-Stop Condition: Command complete. No process remains running. Re-run to refresh.
+Authorization State: Report-only console operation; this command did not modify files, launch an
+assistant, select a workflow, or activate a Profile. [Verified]
+Stop Condition: Command complete; no process remains running. [Verified]
 ```
 
 This is a structural template, not a fixed or permanently expected output. Any concrete, filled-in
