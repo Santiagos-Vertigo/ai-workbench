@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.3 — Engineering Standards: Complete
+v0.4 (in progress)
 
 ## Completed
 
@@ -43,10 +43,11 @@ v0.3 — Engineering Standards: Complete
 - Created standards/ — the first justified Layer 1 artifact.
 - Created standards/git.md, defining universal Git engineering practice.
 - standards/git.md reviewed and validated.
+- Created workflows/repository-exploration.md — first Layer 1 workflow artifact.
 
 ## Current Status
 
-v0.3 Engineering Standards is complete. CLAUDE.md remains the sole authority for execution
+v0.4 Repository Exploration is in progress. CLAUDE.md remains the sole authority for execution
 permission.
 
 ## Architectural Decisions
@@ -72,22 +73,21 @@ ai-workbench/
 ├── README.md
 ├── CLAUDE.md
 ├── WORKBENCH_STATE.md
-└── standards/
-    └── git.md
+├── standards/
+│   └── git.md
+└── workflows/
+    └── repository-exploration.md
 ```
-
-## Next Version
-
-v0.4 — Repository Exploration
 
 ## Next Objective
 
-Design the first read-only, technology-agnostic repository exploration workflow.
+Review and validate workflows/repository-exploration.md before marking v0.4 complete.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively.
-4. Confirm the next objective is designing the v0.4 repository exploration workflow.
+4. Confirm the next objective is reviewing and validating workflows/repository-exploration.md
+   before marking v0.4 complete.
 5. Ask what concrete task motivates the next change before proposing new files or folders.
