@@ -26,7 +26,7 @@ v0.7 — Workbench Console Architecture and State Contract (specification only)
 
 v0.8 — Workbench Console MVP (read-only `status` command)
 
-v0.9 — Capability Composition
+v0.9 — Project State Contract and Console Integration
 
 v1.0 — Portable AI Engineering Workbench
 
@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.8 (complete) — Read-Only Workbench Console MVP
+v0.9 (in progress) — Project State Contract and Console Integration
 
 ## Completed
 
@@ -220,19 +220,10 @@ v0.8 (complete) — Read-Only Workbench Console MVP
 
 ## Current Status
 
-v0.8 — Read-Only Workbench Console MVP is complete. tools/console/workbench.py implements the
-`status` command exactly per docs/console-specification.md (both now in agreement after this
-milestone's correctness pass), validated by 14 synthetic acceptance scenarios covering the
-self-report, argument errors, non-Git and no-state-file cases, state-file precedence and
-malformed-file handling, detached HEAD, missing upstream, dirty tree, and a locally-tracked
-upstream with zero Git remotes configured — all passing, with proven zero-write behavior and
-complete fixture cleanup. v0.7 remains complete and untouched. No external repository was accessed.
-The next action is to run and evaluate the console manually in real use before any launcher
-functionality is considered — no next milestone (v0.9 or otherwise) has been proposed or started.
-Both prior open architectural questions (authorization detail placement; communication-style
-calibration) remain unresolved and are carried forward unchanged. No Profile requirement was
-demonstrated by this milestone. CLAUDE.md remains the sole authority for execution permission and
-was not modified this milestone.
+- v0.9 is in progress.
+- standards/project-state.md has been reviewed and approved.
+- Console specification, console implementation, persistent tests, and structural migration of
+  WORKBENCH_STATE.md have not started.
 
 ## Architectural Decisions
 
@@ -291,7 +282,8 @@ ai-workbench/
 ├── docs/
 │   └── console-specification.md
 ├── standards/
-│   └── git.md
+│   ├── git.md
+│   └── project-state.md
 ├── tools/
 │   └── console/
 │       └── workbench.py
@@ -303,20 +295,18 @@ ai-workbench/
 
 ## Next Objective
 
-Unresolved, pending real usage. v0.8 is complete; no next milestone (v0.9 or otherwise) has been
-proposed or started. The next action is to run and evaluate tools/console/workbench.py manually, in
-real use, before any launcher functionality, workflow recommendation, or persistent state is
-considered — none of those are authorized by this milestone. Do not create profiles/, adapters/, or
-templates/ — no Profile requirement has been demonstrated. Do not access Logitrac or any other
-external repository. Do not commit or push until separately authorized.
+Align docs/console-specification.md and tools/console/workbench.py with the approved Project State
+Contract, add the persistent standard-library regression suite, and structurally migrate
+WORKBENCH_STATE.md without creating an intermediate broken checkpoint. These edits require separate
+authorization.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.8 is complete and no next milestone has been proposed or started; the next step is
-   manual, real-world use of tools/console/workbench.py before anything further is designed.
+4. Confirm v0.9 is in progress; standards/project-state.md is approved, and console integration
+   has not started.
 5. Before invoking any capability workflow or accessing another repository, run
    workflows/session-initialization.md first — this is a CLAUDE.md Core Rule, not optional.
 6. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
