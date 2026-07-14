@@ -34,7 +34,7 @@ The roadmap is intentionally lightweight. Future versions are placeholders for d
 
 ## Current Version
 
-v0.5 (complete)
+v0.6 (in progress) — Session Initialization and Scope Control
 
 ## Completed
 
@@ -87,16 +87,43 @@ v0.5 (complete)
   designing workflows/development.md resolved through repository evidence, explicit decision
   criteria, user clarification, risk-based escalation, or an authorization checkpoint. profiles/
   remains intentionally absent.
+- v0.5 marked complete.
+- An earlier v0.6 direction (Operational Workflow Validation against Logitrac GPS Console) was
+  started, then explicitly stopped before any external modification occurred — Logitrac was
+  accessed strictly read-only, its Git state was confirmed unchanged, and ai-workbench's own
+  in-progress state was restored to the committed v0.5 baseline. That excursion surfaced a real,
+  demonstrated gap: nothing in CLAUDE.md, standards/git.md, or either workflow governed *which*
+  repository may be treated as in scope — only what actions may be taken once scope is already
+  established. This motivated the current v0.6 direction below.
+- Created workflows/session-initialization.md — the mandatory scope gate that must run before any
+  capability workflow is invoked or any repository other than the active one is accessed. Composes
+  with, and does not duplicate, workflows/repository-exploration.md and workflows/development.md;
+  follows the cross-reference-only Authorization Reference pattern development.md established.
+- Added one Core Rule to CLAUDE.md making workflows/session-initialization.md discoverable and
+  operational: session scope must be established before invoking a capability workflow or
+  accessing another repository, and prior context (a mention, an example, a hypothetical, or an
+  AI-generated recommendation) never by itself authorizes selecting, accessing, modifying, or
+  acting on a repository.
+- Validated workflows/session-initialization.md against four simulated scenarios entirely inside
+  ai-workbench (no external repository accessed): explicit Workbench-modification request;
+  external repository mentioned only hypothetically; AI-recommended external repository; and
+  user-selected external repository. Confirmed the incident that motivated this milestone would
+  have been caught.
+- Applied the judgment-resolution framework to the incident itself: resolved via explicit decision
+  criteria, risk-based escalation, and an authorization checkpoint — not Profile evidence, since no
+  recurring behavioral stance survived the five mechanisms. profiles/ remains intentionally absent.
 
 ## Current Status
 
-v0.5 Development Workflow is complete. workflows/development.md is the completed deliverable,
-validated against README.md, CLAUDE.md, standards/git.md, and workflows/repository-exploration.md,
-with no conflicts found and none of those four documents modified. No Profile requirement was
-demonstrated; profiles/ remains intentionally absent. Both open architectural questions
+v0.6 — Session Initialization and Scope Control is in progress. workflows/session-initialization.md
+has been created and CLAUDE.md has gained one Core Rule making it discoverable and mandatory before
+any capability workflow runs or any other repository is accessed. Validated entirely inside
+ai-workbench via four simulated scenarios; not yet marked complete pending review. No external
+repository was accessed during this milestone. Both prior open architectural questions
 (authorization detail placement; communication-style calibration) remain unresolved and are carried
-forward unchanged. No next milestone has yet been approved. CLAUDE.md remains the sole authority
-for execution permission.
+forward unchanged. No Profile requirement was demonstrated by this milestone's motivating incident;
+profiles/ remains intentionally absent. CLAUDE.md remains the sole authority for execution
+permission.
 
 ## Architectural Decisions
 
@@ -156,23 +183,24 @@ ai-workbench/
 │   └── git.md
 └── workflows/
     ├── development.md
-    └── repository-exploration.md
+    ├── repository-exploration.md
+    └── session-initialization.md
 ```
 
 ## Next Objective
 
-No active objective. v0.5 is complete and no next milestone has been approved. v0.6 — Code Review
-Workflow is next on the roadmap, but has not been started and must not begin speculatively. Ask
-what concrete task motivates the next change before proposing new files or folders. Do not create
-profiles/ — no Profile requirement has been demonstrated. Do not commit or push until separately
-authorized.
+Review workflows/session-initialization.md, the new CLAUDE.md Core Rule, and the four simulated
+validation scenarios, and decide whether v0.6 can be marked complete. Do not create profiles/,
+adapters/, or templates/ — no Profile requirement has been demonstrated. Do not access Logitrac or
+any other external repository. Do not commit or push until separately authorized.
 
 ## Resume Instructions
 
 1. Read README.md for vision and philosophy, then this file for current state.
 2. Review the execution authorization policy before proposing repository changes.
 3. Confirm no new Layer 1 structure has been added speculatively — profiles/ still does not exist.
-4. Confirm v0.5 is complete and no next milestone (v0.6 or otherwise) has been approved or started.
+4. Confirm v0.6 is in progress: workflows/session-initialization.md and the CLAUDE.md Core Rule are
+   drafted but not yet marked complete.
 5. Review Open Questions before touching workflows/repository-exploration.md's Prohibited
    Actions section or creating a docs/ directory.
 6. Ask what concrete task motivates the next change before proposing new files or folders.

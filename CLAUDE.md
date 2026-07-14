@@ -83,3 +83,9 @@ modularity, maintainability, and long-term scalability over speed of adding stru
 - Explain architectural decisions before making structural changes.
 - Prefer small, reversible changes over large or hard-to-undo ones.
 - Do not implement unrelated ideas — stay scoped to what was asked.
+- Before invoking a capability workflow (e.g. workflows/repository-exploration.md,
+  workflows/development.md) or accessing any repository other than the one already active,
+  establish session scope via workflows/session-initialization.md. A repository named only in
+  prior context, an example, a hypothetical, or an AI-generated recommendation never by itself
+  authorizes selecting, accessing, modifying, or acting on it — only the user's current, explicit,
+  unambiguous selection does.
