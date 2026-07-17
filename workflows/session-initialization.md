@@ -38,15 +38,28 @@ another repository. It adds only this workflow-specific constraint on top of the
   establishes the candidate scope — do not ask a redundant question to re-confirm it.
 - A repository mentioned only in prior context, an example, a hypothetical, or a recommendation
   this workflow or any other part of the session generated is **not** selected.
+- The assistant's own navigation to a directory (for example, a shell `cd`) never itself selects
+  or authorizes that directory — only the user's explicit statement does. Repeated `cd` commands
+  reaching a location are not evidence of scope and must never be treated as if they were.
 - If accessing a repository the user did not explicitly select is being proposed, stop and present
   a direct scope checkpoint; wait for confirmation before accessing it.
+- Before Bounded Development Mode (see CLAUDE.md) is entered against a repository other than the
+  one already active, that repository must also be an explicitly authorized accessible directory
+  (e.g. via `--add-dir` or `/add-dir`) — naming it in a message is necessary but not sufficient for
+  development actions, only for read-only inspection under the scope gate below.
 - When the active target is ambiguous, ask rather than infer.
 
 ## Procedure
 
-1. **Determine the operating mode** — modifying the Workbench, using the Workbench, or
-   architectural discussion only. Resolve from the user's current request; if unclear, ask — never
-   infer from task shape alone.
+1. **Determine the operating mode and autonomy scope.** Operating mode is modifying the Workbench,
+   using the Workbench, or architectural discussion only. Autonomy scope is Read-Only/Explore, the
+   default, or Bounded Development (Build) — the latter requires an explicit statement from the
+   user naming both the target repository and the objective and explicitly invoking bounded
+   development/Build-mode autonomy, per CLAUDE.md's Bounded Development Mode. Resolve both from the
+   user's current request; if unclear, ask — never infer from task shape alone. Re-run this
+   determination whenever the requested outcome shifts to a materially different engineering
+   objective within the same conversation — a prior autonomy-scope grant does not carry over to a
+   new, unrelated objective.
 2. **Establish the requested outcome** in the user's own terms.
 3. **Identify candidate repositories** named anywhere in the current request.
 4. **Distinguish explicit selection from contextual mention**, per the Scope-Selection Rule above —
@@ -76,6 +89,7 @@ another repository. It adds only this workflow-specific constraint on top of the
 # Session Scope Declaration
 
 ## Operating Mode
+## Autonomy Scope
 ## Requested Outcome
 ## Active Repository
 ## In-Scope Repositories

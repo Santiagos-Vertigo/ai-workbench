@@ -33,6 +33,7 @@ modularity, maintainability, and long-term scalability over speed of adding stru
 - Execute build scripts
 - Execute tests
 - Execute migrations
+- Apply automatic lint or formatting fixes
 - Modify configuration
 - Create directories
 
@@ -56,6 +57,53 @@ modularity, maintainability, and long-term scalability over speed of adding stru
 - Close a pull request
 - Merge a pull request
 
+## Bounded Development Mode
+
+An explicit, current statement from the user naming both a target repository and a concrete
+objective, and explicitly invoking bounded development/Build-mode autonomy for that repository and
+objective, pre-authorizes the following actions from the "Requires approval before execution" tier
+above, for the duration of that declared scope, without a separate approval prompt before each
+individual instance:
+
+- Edit files
+- Create files
+- Create directories
+- Install dependencies
+- Execute build scripts
+- Execute tests
+- Apply automatic lint or formatting fixes — read-only lint/formatting checks are already covered
+  by the Safe tier's "Run read-only inspection commands" and need no Bounded Development Mode
+  pre-authorization at all; this bullet covers only the write variant (applying fixes), and only
+  for files inside the declared task scope, with each automatic fix followed by a diff review and a
+  validation pass (tests/build, as applicable) before being treated as complete
+- Modify configuration — project-local configuration only, never global or machine-level
+  configuration
+
+This pre-authorization is limited to files inside the declared target repository that are relevant
+to the declared objective, and to repairing failures caused by this task's own changes.
+
+Never pre-authorized by Bounded Development Mode, regardless of how the mode was entered — these
+remain individually gated exactly as the tiers above define:
+
+- Delete files
+- Rename or move files
+- Execute migrations
+- Every action in the "Requires explicit approval every time" tier, unchanged and unaffected
+- Any action outside the declared target repository
+- Global or machine-level installation or configuration
+- Elevated commands
+
+Repository Exploration (workflows/repository-exploration.md) and Review remain read-only workflows,
+unaffected by Bounded Development Mode — this mode changes only which already-approved-tier actions
+require a fresh prompt each time; it never expands what may be executed beyond the "Requires
+approval before execution" tier already defined above.
+
+Bounded Development Mode is entered only through workflows/session-initialization.md's scope
+establishment, per an explicit, current, unambiguous statement — never inferred, never carried over
+from a different repository or a different objective raised earlier in the same conversation. When
+operating on a repository other than this one, that repository must also be an explicitly
+authorized accessible directory (e.g. via `--add-dir`), not merely named in a message.
+
 ## Core rules
 
 - Treat this repository as an engineering framework, not an application. Never add application
@@ -66,7 +114,8 @@ modularity, maintainability, and long-term scalability over speed of adding stru
 - Prefer modifying an existing document over creating a new one, unless clear separation of
   concerns would improve maintainability.
 - Discussion, analysis, and plans are never authorization to execute — each action still requires
-  separate, explicit approval before it runs.
+  separate, explicit approval before it runs, except for an action Bounded Development Mode has
+  already pre-authorized for a currently declared scope (see Bounded Development Mode above).
 - Never perform Git or pull request operations automatically — always recommend and wait for
   explicit approval, every time.
 - Approval for one action never authorizes another.
@@ -88,7 +137,10 @@ modularity, maintainability, and long-term scalability over speed of adding stru
   establish session scope via workflows/session-initialization.md. A repository named only in
   prior context, an example, a hypothetical, or an AI-generated recommendation never by itself
   authorizes selecting or accessing it; only the user's current, explicit, unambiguous selection
-  establishes that it is in scope. Selection establishes scope only — it never by itself
-  authorizes modifying, staging, committing, pushing, deploying, or any other action already
-  gated above; those still require their own separate approval under the tiers already defined
-  in this document.
+  establishes that it is in scope. Nor does the assistant's own navigation to it (for example, a
+  shell `cd`) establish or expand that scope — see workflows/session-initialization.md's
+  Scope-Selection Rule. Selection establishes scope only — it never by itself authorizes modifying,
+  staging, committing, pushing, deploying, or any other action already gated above; those still
+  require their own separate approval under the tiers already defined in this document, unless
+  Bounded Development Mode has been explicitly entered for that exact scope (see Bounded
+  Development Mode above).

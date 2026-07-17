@@ -22,6 +22,10 @@ actions this workflow can recommend but never performs on its own.
   approval-required tier only after the checkpoint in step 8. This workflow never performs `git
   add`, `git commit`, `git push`, or any other explicit-approval-every-time action — those are
   always separate decisions outside its scope.
+- When Bounded Development Mode (CLAUDE.md) is already active for the declared repository and
+  objective, steps 10–11's approval-required actions proceed under that existing pre-authorization
+  rather than a fresh prompt before each one — this workflow does not redefine Bounded Development
+  Mode, it only operates under it when active.
 
 ## Authorization Reference
 
@@ -30,9 +34,12 @@ taken while executing it is bound by those tiers exactly as written there. It ad
 workflow-specific constraints on top of them:
 
 - Implementation (step 10 onward) never begins before scope, constraints, risks, and acceptance
-  criteria have been stated in writing and presented to the user as a checkpoint (step 8).
+  criteria have been stated in writing — presented as a checkpoint (step 8) outside an active
+  Bounded Development Mode scope, or for transparency without blocking when that mode is already
+  active for the declared repository and objective.
 - Committing and pushing are always separate from "implement," "validate," and "report" — approval
-  of any earlier step never implies approval of either.
+  of any earlier step, and Bounded Development Mode itself, never implies approval of either; both
+  remain in CLAUDE.md's explicit-approval-every-time tier, unaffected by Bounded Development Mode.
 
 ## Judgment Resolution
 
@@ -78,15 +85,23 @@ asserting the need generically.
 7. **Separate verified facts, inferences, and unresolved questions.** Apply the Evidence
    Classification scheme from workflows/repository-exploration.md (`[Verified]` / `[Inference]` /
    `[Unknown]`) to everything gathered in steps 2–6; do not redefine it here.
-8. **Propose an implementation plan proportional to the change, and present it as a checkpoint.**
-   Scale plan detail to blast radius — files touched, whether public interfaces or contracts
-   change, reversibility, whether shared or production state is affected. Present scope,
-   constraints, risks, acceptance criteria, and plan to the user before anything is created or
-   edited; this is an authorization checkpoint (mechanism 5), not a formality.
+8. **Propose an implementation plan proportional to the change, and present it as a checkpoint —
+   or, if Bounded Development Mode is already active for this exact repository and objective,
+   present it for transparency without waiting on a further approval before continuing.** Scale
+   plan detail to blast radius — files touched, whether public interfaces or contracts change,
+   reversibility, whether shared or production state is affected. Outside an active Bounded
+   Development Mode scope, present scope, constraints, risks, acceptance criteria, and plan to the
+   user before anything is created or edited; this is an authorization checkpoint (mechanism 5),
+   not a formality.
 9. **Observe CLAUDE.md's Execution Authorization boundaries before any mutation.** Plan approval in
-   step 8 is not execution approval — each individual Edit, Create, Delete, dependency install, or
-   configuration change still requires its own approval exactly as CLAUDE.md defines, regardless of
-   what was approved earlier in this workflow.
+   step 8 is not, by itself, execution approval. Outside an active Bounded Development Mode scope,
+   each individual Edit, Create, Delete, dependency install, or configuration change still requires
+   its own approval exactly as CLAUDE.md defines, regardless of what was approved earlier in this
+   workflow. Inside an active Bounded Development Mode scope, Edit, Create, directory creation,
+   dependency install, build, test, and lint actions proceed without a fresh prompt for each
+   instance, per CLAUDE.md's Bounded Development Mode — but Delete, Rename/move, Execute
+   migrations, and every action in CLAUDE.md's explicit-approval-every-time tier remain
+   individually gated regardless of Bounded Development Mode.
 10. **Implement narrowly and incrementally.** Match existing repository conventions observed in
     step 4 — repository evidence is the default resolution for implementation-choice judgment
     calls. Where no convention exists, default to the simplest option that satisfies the acceptance
